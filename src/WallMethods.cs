@@ -1272,6 +1272,179 @@ namespace RevitMCPBridge
         /// <param name="wallId">ID of the wall to modify</param>
         /// <param name="endIndex">0 for start point, 1 for end point</param>
         /// <param name="newPoint">New coordinates [x, y, z] in feet</param>
+
+        // ===================================================================
+        // COMPOUND (multi-layer) WALL TYPES  — finishes / insulation / core
+        // ===================================================================
+
+        /// <summary>Get-or-create a Material by name. Returns Invalid id if name blank.</summary>
+        private static ElementId EnsureMaterialId(Document doc, string materialName)
+        {
+            if (string.IsNullOrWhiteSpace(materialName))
+                return ElementId.InvalidElementId;
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(Material)).Cast<Material>()
+                .FirstOrDefault(m => string.Equals(m.Name, materialName, StringComparison.OrdinalIgnoreCase));
+            return existing != null ? existing.Id : Material.Create(doc, materialName);
+        }
+
+        /// <summary>Map a layer-function string to a Revit MaterialFunctionAssignment.</summary>
+        private static MaterialFunctionAssignment ParseLayerFunction(string fn)
+        {
+            switch ((fn ?? "").Trim().ToLowerInvariant())
+            {
+                case "structure": case "core": return MaterialFunctionAssignment.Structure;
+                case "substrate": return MaterialFunctionAssignment.Substrate;
+                case "insulation": case "thermal": case "thermal/air": case "thermalair": case "air":
+                    return MaterialFunctionAssignment.Insulation;
+                case "finish1": case "finishexterior": case "exteriorfinish": case "finish_ext":
+                    return MaterialFunctionAssignment.Finish1;
+                case "finish2": case "finishinterior": case "interiorfinish": case "finish_int":
+                    return MaterialFunctionAssignment.Finish2;
+                case "membrane": return MaterialFunctionAssignment.Membrane;
+                case "structuraldeck": case "deck": return MaterialFunctionAssignment.StructuralDeck;
+                default: return MaterialFunctionAssignment.Finish2;
+            }
+        }
+
+        /// <summary>
+        /// Create (or replace) a multi-layer wall type with finish/insulation/structure layers.
+        /// layers[] are ordered EXTERIOR -> INTERIOR; each: {function, thicknessInches|thicknessFt, materialName?}.
+        /// Core is inferred from Structure-function layers unless exteriorShellCount/interiorShellCount given.
+        /// Optional wallFunction: interior|exterior|foundation|retaining|soffit|coreshaft.
+        /// </summary>
+        [MCPMethod("createCompoundWallType", Category = "Wall", Description = "Create a multi-layer wall type (finishes, insulation, core) with materials")]
+        public static string CreateCompoundWallType(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+
+                var newTypeName = parameters["newTypeName"]?.ToString();
+                if (string.IsNullOrWhiteSpace(newTypeName))
+                    return ResponseBuilder.Error("newTypeName is required", "MISSING_PARAMETER").Build();
+
+                var layerArr = parameters["layers"] as JArray;
+                if (layerArr == null || layerArr.Count == 0)
+                    return ResponseBuilder.Error("layers array is required (ordered exterior->interior)", "MISSING_PARAMETER").Build();
+
+                WallType sourceType = null;
+                if (parameters["sourceTypeId"] != null)
+                    sourceType = doc.GetElement(new ElementId(parameters["sourceTypeId"].ToObject<long>())) as WallType;
+                if (sourceType == null && parameters["sourceTypeName"] != null)
+                {
+                    var sn = parameters["sourceTypeName"].ToString();
+                    sourceType = new FilteredElementCollector(doc).OfClass(typeof(WallType)).Cast<WallType>()
+                        .FirstOrDefault(wt => wt.Name == sn && wt.Kind == WallKind.Basic);
+                }
+                if (sourceType == null)
+                    sourceType = new FilteredElementCollector(doc).OfClass(typeof(WallType)).Cast<WallType>()
+                        .FirstOrDefault(wt => wt.Kind == WallKind.Basic);
+                if (sourceType == null)
+                    return ResponseBuilder.Error("No Basic Wall source type found", "TYPE_NOT_FOUND").Build();
+
+                WallType targetType = null;
+                var layerInfo = new List<object>();
+                double total = 0;
+
+                using (var trans = new Transaction(doc, "Create Compound Wall Type"))
+                {
+                    trans.Start();
+                    var fo = trans.GetFailureHandlingOptions();
+                    fo.SetFailuresPreprocessor(new WarningSwallower());
+                    trans.SetFailureHandlingOptions(fo);
+
+                    targetType = new FilteredElementCollector(doc).OfClass(typeof(WallType)).Cast<WallType>()
+                        .FirstOrDefault(wt => wt.Name == newTypeName && wt.Kind == WallKind.Basic);
+                    if (targetType == null)
+                        targetType = sourceType.Duplicate(newTypeName) as WallType;
+
+                    var layers = new List<CompoundStructureLayer>();
+                    int firstStruct = -1, lastStruct = -1;
+                    for (int i = 0; i < layerArr.Count; i++)
+                    {
+                        var l = (JObject)layerArr[i];
+                        var fn = ParseLayerFunction(l["function"]?.ToString());
+                        double widthFt = l["thicknessFt"] != null ? l["thicknessFt"].ToObject<double>()
+                            : l["thicknessInches"] != null ? l["thicknessInches"].ToObject<double>() / 12.0
+                            : 0.0;
+                        if (fn == MaterialFunctionAssignment.Membrane) widthFt = 0.0;
+                        var matName = l["materialName"]?.ToString();
+                        var matId = EnsureMaterialId(doc, matName);
+                        layers.Add(new CompoundStructureLayer(widthFt, fn, matId));
+                        if (fn == MaterialFunctionAssignment.Structure)
+                        {
+                            if (firstStruct < 0) firstStruct = i;
+                            lastStruct = i;
+                        }
+                        total += widthFt;
+                        layerInfo.Add(new {
+                            index = i,
+                            function = fn.ToString(),
+                            thicknessInches = Math.Round(widthFt * 12.0, 4),
+                            material = string.IsNullOrWhiteSpace(matName) ? "None" : matName
+                        });
+                    }
+
+                    var cs = CompoundStructure.CreateSimpleCompoundStructure(layers);
+
+                    int extShell = parameters["exteriorShellCount"] != null
+                        ? parameters["exteriorShellCount"].ToObject<int>()
+                        : (firstStruct < 0 ? 0 : firstStruct);
+                    int intShell = parameters["interiorShellCount"] != null
+                        ? parameters["interiorShellCount"].ToObject<int>()
+                        : (lastStruct < 0 ? 0 : (layers.Count - 1 - lastStruct));
+
+                    // Must leave at least one core layer between the shells.
+                    if (extShell + intShell <= layers.Count - 1)
+                    {
+                        if (extShell > 0) cs.SetNumberOfShellLayers(ShellLayerType.Exterior, extShell);
+                        if (intShell > 0) cs.SetNumberOfShellLayers(ShellLayerType.Interior, intShell);
+                    }
+
+                    targetType.SetCompoundStructure(cs);
+
+                    var fnParam = parameters["wallFunction"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(fnParam))
+                    {
+                        int wf = -1;
+                        switch (fnParam.Trim().ToLowerInvariant())
+                        {
+                            case "interior": wf = (int)WallFunction.Interior; break;
+                            case "exterior": wf = (int)WallFunction.Exterior; break;
+                            case "foundation": wf = (int)WallFunction.Foundation; break;
+                            case "retaining": wf = (int)WallFunction.Retaining; break;
+                            case "soffit": wf = (int)WallFunction.Soffit; break;
+                            case "coreshaft": case "core-shaft": wf = (int)WallFunction.Coreshaft; break;
+                        }
+                        if (wf >= 0)
+                            targetType.get_Parameter(BuiltInParameter.FUNCTION_PARAM)?.Set(wf);
+                    }
+
+                    trans.Commit();
+                }
+
+                return ResponseBuilder.Success()
+                    .With("wallTypeId", (int)targetType.Id.Value)
+                    .With("wallTypeName", targetType.Name)
+                    .With("totalThicknessInches", Math.Round(total * 12.0, 4))
+                    .With("layerCount", layerInfo.Count)
+                    .With("layers", layerInfo)
+                    .Build();
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
+        /// Set a single wall endpoint to a new location.
+        /// Used for adjusting wall connections without recreating walls.
+        /// </summary>
+        /// <param name="wallId">ID of the wall to modify</param>
+        /// <param name="endIndex">0 for start point, 1 for end point</param>
+        /// <param name="newPoint">New coordinates [x, y, z] in feet</param>
         [MCPMethod("setWallEndpoint", Category = "Wall", Description = "Set the start or end point of a wall")]
         public static string SetWallEndpoint(UIApplication uiApp, JObject parameters)
         {
