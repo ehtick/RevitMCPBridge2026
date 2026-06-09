@@ -33,6 +33,12 @@ namespace RevitMCPBridge
         private UIApplication _uiApp;
         private Document _doc;
 
+        // This window is modeless, so Revit API calls (transactions, element
+        // creation) must be marshalled through an ExternalEvent — calling the
+        // API directly from a button handler throws "outside of API context".
+        private CreateTracedWallsHandler _createWallsHandler;
+        private ExternalEvent _createWallsEvent;
+
         // Scale: pixels to feet
         private double _scale = 0.05; // Default: 0.05 feet per pixel
         private bool _isSettingScale = false;
@@ -80,6 +86,10 @@ namespace RevitMCPBridge
         {
             _uiApp = uiApp;
             _doc = uiApp.ActiveUIDocument.Document;
+
+            // Must be created here (valid API context), not at Raise time
+            _createWallsHandler = new CreateTracedWallsHandler(this);
+            _createWallsEvent = ExternalEvent.Create(_createWallsHandler);
 
             // Window properties - professional styling using SketchPadColors
             Title = "Floor Plan Tracer - Trace to Revit";
@@ -1079,68 +1089,49 @@ namespace RevitMCPBridge
 
             if (result != MessageBoxResult.Yes) return;
 
-            try
+            // Pixel-to-feet conversion is pure math and safe here; the Revit
+            // work itself runs in CreateTracedWallsHandler.Execute on the
+            // API thread.
+            var segments = new List<CreateTracedWallsHandler.TracedWallSegment>();
+            foreach (var wall in walls)
             {
-                int created = 0;
-
-                using (var trans = new Transaction(_doc, "Create Traced Walls"))
+                var startRevit = PixelToRevit(wall.StartPoint);
+                var endRevit = PixelToRevit(wall.EndPoint);
+                segments.Add(new CreateTracedWallsHandler.TracedWallSegment
                 {
-                    trans.Start();
-
-                    var level = new FilteredElementCollector(_doc)
-                        .OfClass(typeof(Level))
-                        .Cast<Level>()
-                        .OrderBy(l => l.Elevation)
-                        .FirstOrDefault();
-
-                    if (level == null)
-                    {
-                        MessageBox.Show("No levels found in the model.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        trans.RollBack();
-                        return;
-                    }
-
-                    foreach (var wall in walls)
-                    {
-                        try
-                        {
-                            var startRevit = PixelToRevit(wall.StartPoint);
-                            var endRevit = PixelToRevit(wall.EndPoint);
-
-                            var line = Autodesk.Revit.DB.Line.CreateBound(
-                                new XYZ(startRevit.X, startRevit.Y, 0),
-                                new XYZ(endRevit.X, endRevit.Y, 0)
-                            );
-
-                            var wallType = _doc.GetElement(new ElementId(wall.WallTypeId)) as WallType;
-                            if (wallType == null)
-                            {
-                                wallType = new FilteredElementCollector(_doc)
-                                    .OfClass(typeof(WallType))
-                                    .Cast<WallType>()
-                                    .FirstOrDefault();
-                            }
-
-                            var newWall = Wall.Create(_doc, line, wallType.Id, level.Id, 10.0, 0, false, false);
-                            if (newWall != null)
-                                created++;
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Failed to create wall: {ex.Message}");
-                        }
-                    }
-
-                    trans.Commit();
-                }
-
-                StatusText.Text = $"Created {created} walls in Revit!";
-                MessageBox.Show($"Successfully created {created} walls in Revit!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    StartX = startRevit.X,
+                    StartY = startRevit.Y,
+                    EndX = endRevit.X,
+                    EndY = endRevit.Y,
+                    WallTypeId = wall.WallTypeId
+                });
             }
-            catch (Exception ex)
+
+            if (!_createWallsHandler.TrySetWalls(_doc, segments))
             {
-                MessageBox.Show($"Error creating walls: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Wall creation is already in progress.", "Busy", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            _createWallsEvent.Raise();
+            StatusText.Text = $"Creating {segments.Count} walls in Revit...";
+        }
+
+        /// <summary>
+        /// Called (on the UI dispatcher) by CreateTracedWallsHandler when the
+        /// external event has finished creating walls.
+        /// </summary>
+        internal void OnWallsCreated(int created, string error)
+        {
+            if (error != null)
+            {
+                StatusText.Text = $"Wall creation failed: {error}";
+                MessageBox.Show($"Error creating walls: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            StatusText.Text = $"Created {created} walls in Revit!";
+            MessageBox.Show($"Successfully created {created} walls in Revit!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private Point PixelToRevit(Point pixel)
@@ -1299,6 +1290,136 @@ namespace RevitMCPBridge
     /// <summary>
     /// Represents a traced element (wall, door, or window)
     /// </summary>
+    /// <summary>
+    /// External event handler that creates traced walls on Revit's main
+    /// thread. The FloorPlanTracerWindow is modeless, so this is the only
+    /// valid way for it to run transactions.
+    /// </summary>
+    public class CreateTracedWallsHandler : IExternalEventHandler
+    {
+        public class TracedWallSegment
+        {
+            public double StartX { get; set; }
+            public double StartY { get; set; }
+            public double EndX { get; set; }
+            public double EndY { get; set; }
+            public int WallTypeId { get; set; }
+        }
+
+        private readonly FloorPlanTracerWindow _window;
+        private readonly object _sync = new object();
+        private Document _doc;
+        private List<TracedWallSegment> _walls;
+
+        public CreateTracedWallsHandler(FloorPlanTracerWindow window)
+        {
+            _window = window;
+        }
+
+        /// <summary>
+        /// Stores the payload for the next Execute. Returns false if a
+        /// previous payload is still pending (Raise coalesces, so accepting
+        /// a second payload would silently drop the first).
+        /// </summary>
+        public bool TrySetWalls(Document doc, List<TracedWallSegment> walls)
+        {
+            lock (_sync)
+            {
+                if (_walls != null) return false;
+                _doc = doc;
+                _walls = walls;
+                return true;
+            }
+        }
+
+        public void Execute(UIApplication app)
+        {
+            Document doc;
+            List<TracedWallSegment> walls;
+            lock (_sync)
+            {
+                doc = _doc;
+                walls = _walls;
+                _doc = null;
+                _walls = null;
+            }
+
+            if (doc == null || walls == null || walls.Count == 0) return;
+
+            int created = 0;
+            string error = null;
+
+            try
+            {
+                if (!doc.IsValidObject)
+                {
+                    error = "The document the trace belongs to is no longer open.";
+                }
+                else
+                {
+                    using (var trans = new Transaction(doc, "Create Traced Walls"))
+                    {
+                        trans.Start();
+
+                        var level = new FilteredElementCollector(doc)
+                            .OfClass(typeof(Level))
+                            .Cast<Level>()
+                            .OrderBy(l => l.Elevation)
+                            .FirstOrDefault();
+
+                        if (level == null)
+                        {
+                            trans.RollBack();
+                            error = "No levels found in the model.";
+                        }
+                        else
+                        {
+                            foreach (var w in walls)
+                            {
+                                try
+                                {
+                                    var line = Autodesk.Revit.DB.Line.CreateBound(
+                                        new XYZ(w.StartX, w.StartY, 0),
+                                        new XYZ(w.EndX, w.EndY, 0));
+
+                                    var wallType = doc.GetElement(new ElementId(w.WallTypeId)) as WallType
+                                        ?? new FilteredElementCollector(doc)
+                                            .OfClass(typeof(WallType))
+                                            .Cast<WallType>()
+                                            .FirstOrDefault();
+                                    if (wallType == null) continue;
+
+                                    var newWall = Wall.Create(doc, line, wallType.Id, level.Id, 10.0, 0, false, false);
+                                    if (newWall != null)
+                                        created++;
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to create wall: {ex.Message}");
+                                }
+                            }
+
+                            trans.Commit();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            var createdCount = created;
+            var err = error;
+            _window?.Dispatcher.BeginInvoke(new Action(() => _window.OnWallsCreated(createdCount, err)));
+        }
+
+        public string GetName()
+        {
+            return "Floor Plan Tracer - Create Walls";
+        }
+    }
+
     public class TracedElement : INotifyPropertyChanged
     {
         public string ElementType { get; set; }
