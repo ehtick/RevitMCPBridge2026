@@ -2117,24 +2117,13 @@ namespace RevitMCPBridge
                     var wall = _drawnWalls[wallIndex];
                     _drawnWalls.RemoveAt(wallIndex);
 
-                    // Delete from Revit if it has an element ID
+                    // Delete from Revit if it has an element ID — through the
+                    // ExternalEvent: this window is modeless, so an inline
+                    // Transaction here throws "outside of API context"
                     if (wall.RevitElementId.HasValue)
                     {
-                        try
-                        {
-                            var elemId = new ElementId(wall.RevitElementId.Value);
-                            using (var trans = new Transaction(_doc, "Delete SketchPad Wall"))
-                            {
-                                trans.Start();
-                                _doc.Delete(elemId);
-                                trans.CommitAndCheck();
-                            }
-                            StatusText.Text = "Wall deleted from Revit.";
-                        }
-                        catch (Exception ex)
-                        {
-                            StatusText.Text = $"Delete failed: {ex.Message}";
-                        }
+                        DeleteFromRevit(wall.RevitElementId.Value);
+                        StatusText.Text = "Wall delete sent to Revit.";
                     }
                 }
             }
@@ -2284,17 +2273,18 @@ namespace RevitMCPBridge
             };
             _drawnWalls.Add(drawnWall);
 
-            // Queue the wall creation
-            _createWallHandler.SetWallData(
+            // Queue the wall creation (queued, not slot-set: rapid drawing
+            // raises faster than Execute runs and a shared slot dropped walls)
+            _createWallHandler.DrawnWalls = _drawnWalls;
+            _createWallHandler.EnqueueWall(
                 _doc,
                 startX, startY,
                 endX, endY,
                 _currentLevelId,
                 _currentWallTypeId,
-                _wallHeight
+                _wallHeight,
+                wallIndex
             );
-            _createWallHandler.WallIndex = wallIndex;
-            _createWallHandler.DrawnWalls = _drawnWalls;
 
             // Trigger external event
             _externalEvent.Raise();
@@ -3034,19 +3024,17 @@ namespace RevitMCPBridge
                 DrawingCanvas.Children.Remove(elem);
             }
 
-            // Delete from Revit
+            // Delete from Revit — through the ExternalEvent: this window is
+            // modeless, so an inline Transaction here throws "outside of API
+            // context" (the Undo button never actually worked)
             if (_createdElements.Count > 0)
             {
                 var elemId = _createdElements.Pop();
                 try
                 {
-                    using (var trans = new Transaction(_doc, "Undo SketchPad"))
-                    {
-                        trans.Start();
-                        _doc.Delete(elemId);
-                        trans.CommitAndCheck();
-                    }
-                    StatusText.Text = "Undo: Element deleted.";
+                    _deleteElementHandler.SetDeleteData(_doc, new List<ElementId> { elemId });
+                    _deleteExternalEvent.Raise();
+                    StatusText.Text = "Undo: element delete sent to Revit.";
                 }
                 catch (Exception ex)
                 {
@@ -4920,58 +4908,85 @@ namespace RevitMCPBridge
     /// </summary>
     public class CreateWallHandler : IExternalEventHandler
     {
-        private Document _doc;
-        private double _startX, _startY, _endX, _endY;
-        private ElementId _levelId, _wallTypeId;
-        private double _height;
+        // Queued payloads: ExternalEvent.Raise coalesces while pending, so a
+        // single shared field set would silently drop every wall but the last
+        // when the user draws quickly (its RevitElementId stayed null, which
+        // then broke delete/undo for that wall). Execute drains the queue.
+        public class PendingWall
+        {
+            public Document Doc;
+            public double StartX, StartY, EndX, EndY;
+            public ElementId LevelId, WallTypeId;
+            public double Height;
+            public int WallIndex = -1;
+        }
+
+        private readonly object _sync = new object();
+        private readonly Queue<PendingWall> _pending = new Queue<PendingWall>();
         private ElementId _lastCreatedId;
 
         // Reference to wall tracking
-        public int WallIndex { get; set; } = -1;
         public List<SketchPadWindow.DrawnWall> DrawnWalls { get; set; }
 
         public ElementId LastCreatedId => _lastCreatedId;
 
-        public void SetWallData(Document doc, double startX, double startY, double endX, double endY,
-                                ElementId levelId, ElementId wallTypeId, double height)
+        public void EnqueueWall(Document doc, double startX, double startY, double endX, double endY,
+                                ElementId levelId, ElementId wallTypeId, double height, int wallIndex)
         {
-            _doc = doc;
-            _startX = startX;
-            _startY = startY;
-            _endX = endX;
-            _endY = endY;
-            _levelId = levelId;
-            _wallTypeId = wallTypeId;
-            _height = height;
+            lock (_sync)
+            {
+                _pending.Enqueue(new PendingWall
+                {
+                    Doc = doc,
+                    StartX = startX,
+                    StartY = startY,
+                    EndX = endX,
+                    EndY = endY,
+                    LevelId = levelId,
+                    WallTypeId = wallTypeId,
+                    Height = height,
+                    WallIndex = wallIndex
+                });
+            }
         }
 
         public void Execute(UIApplication app)
         {
-            try
+            List<PendingWall> batch;
+            lock (_sync)
             {
-                using (var trans = new Transaction(_doc, "SketchPad Wall"))
-                {
-                    trans.Start();
-
-                    var startPt = new XYZ(_startX, _startY, 0);
-                    var endPt = new XYZ(_endX, _endY, 0);
-                    var line = Autodesk.Revit.DB.Line.CreateBound(startPt, endPt);
-
-                    var wall = Wall.Create(_doc, line, _wallTypeId, _levelId, _height, 0, false, false);
-                    _lastCreatedId = wall.Id;
-
-                    // Update the drawn wall with the Revit element ID
-                    if (WallIndex >= 0 && DrawnWalls != null && WallIndex < DrawnWalls.Count)
-                    {
-                        DrawnWalls[WallIndex].RevitElementId = (int)wall.Id.Value;
-                    }
-
-                    trans.CommitAndCheck();
-                }
+                batch = new List<PendingWall>(_pending);
+                _pending.Clear();
             }
-            catch (Exception ex)
+
+            foreach (var w in batch)
             {
-                System.Diagnostics.Debug.WriteLine($"Wall creation failed: {ex.Message}");
+                try
+                {
+                    using (var trans = new Transaction(w.Doc, "SketchPad Wall"))
+                    {
+                        trans.Start();
+
+                        var startPt = new XYZ(w.StartX, w.StartY, 0);
+                        var endPt = new XYZ(w.EndX, w.EndY, 0);
+                        var line = Autodesk.Revit.DB.Line.CreateBound(startPt, endPt);
+
+                        var wall = Wall.Create(w.Doc, line, w.WallTypeId, w.LevelId, w.Height, 0, false, false);
+                        _lastCreatedId = wall.Id;
+
+                        // Update the drawn wall with the Revit element ID
+                        if (w.WallIndex >= 0 && DrawnWalls != null && w.WallIndex < DrawnWalls.Count)
+                        {
+                            DrawnWalls[w.WallIndex].RevitElementId = (int)wall.Id.Value;
+                        }
+
+                        trans.CommitAndCheck();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Wall creation failed: {ex.Message}");
+                }
             }
         }
 
@@ -5248,34 +5263,50 @@ namespace RevitMCPBridge
     /// </summary>
     public class DeleteElementHandler : IExternalEventHandler
     {
+        // Accumulating queue: ExternalEvent.Raise coalesces while pending, so
+        // assigning a fresh list on each call could drop ids queued between
+        // Raise and Execute.
+        private readonly object _sync = new object();
         private Document _doc;
-        private List<ElementId> _elementIds = new List<ElementId>();
+        private readonly List<ElementId> _elementIds = new List<ElementId>();
 
         public void SetDeleteData(Document doc, List<ElementId> elementIds)
         {
-            _doc = doc;
-            _elementIds = elementIds;
+            lock (_sync)
+            {
+                _doc = doc;
+                _elementIds.AddRange(elementIds);
+            }
         }
 
         public void Execute(UIApplication app)
         {
-            if (_doc == null || _elementIds == null || _elementIds.Count == 0)
+            Document doc;
+            List<ElementId> ids;
+            lock (_sync)
+            {
+                doc = _doc;
+                ids = new List<ElementId>(_elementIds);
+                _elementIds.Clear();
+            }
+
+            if (doc == null || ids.Count == 0)
                 return;
 
             try
             {
-                using (var trans = new Transaction(_doc, "SketchPad Delete"))
+                using (var trans = new Transaction(doc, "SketchPad Delete"))
                 {
                     trans.Start();
 
                     // Delete all elements
-                    foreach (var id in _elementIds)
+                    foreach (var id in ids)
                     {
                         try
                         {
-                            if (_doc.GetElement(id) != null)
+                            if (doc.GetElement(id) != null)
                             {
-                                _doc.Delete(id);
+                                doc.Delete(id);
                             }
                         }
                         catch (Exception ex)
@@ -5290,10 +5321,6 @@ namespace RevitMCPBridge
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Delete transaction failed: {ex.Message}");
-            }
-            finally
-            {
-                _elementIds.Clear();
             }
         }
 
