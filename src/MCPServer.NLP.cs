@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,9 +18,11 @@ namespace RevitMCPBridge
     {
         #region Natural Language Processing Methods
 
-        // Pending confirmation commands (keyed by confirmation token)
-        private static Dictionary<string, SafeCommandProcessor.ProcessedCommand> _pendingConfirmations =
-            new Dictionary<string, SafeCommandProcessor.ProcessedCommand>();
+        // Pending confirmation commands (keyed by confirmation token).
+        // Concurrent: each pipe client handles requests on its own
+        // threadpool task, so this is mutated from multiple threads.
+        private static readonly ConcurrentDictionary<string, SafeCommandProcessor.ProcessedCommand> _pendingConfirmations =
+            new ConcurrentDictionary<string, SafeCommandProcessor.ProcessedCommand>();
         private static SafeCommandProcessor _nlpProcessor;
 
         /// <summary>
@@ -148,7 +151,9 @@ namespace RevitMCPBridge
                     });
                 }
 
-                if (!_pendingConfirmations.TryGetValue(token, out var command))
+                // Atomic get+remove so two concurrent confirms of the same
+                // token cannot both execute the command
+                if (!_pendingConfirmations.TryRemove(token, out var command))
                 {
                     return JsonConvert.SerializeObject(new
                     {
@@ -156,9 +161,6 @@ namespace RevitMCPBridge
                         error = "Confirmation token not found or expired. Please process the command again."
                     });
                 }
-
-                // Remove from pending
-                _pendingConfirmations.Remove(token);
 
                 // Execute the confirmed command
                 return await ExecuteProcessedCommand(command);
@@ -286,7 +288,7 @@ namespace RevitMCPBridge
                 var toRemove = _pendingConfirmations.Keys.Take(25).ToList();
                 foreach (var key in toRemove)
                 {
-                    _pendingConfirmations.Remove(key);
+                    _pendingConfirmations.TryRemove(key, out _);
                 }
             }
         }
