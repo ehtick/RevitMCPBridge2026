@@ -32,7 +32,11 @@ namespace RevitMCPBridge
             var requestItem = new RequestItem
             {
                 Action = action,
-                CompletionSource = new TaskCompletionSource<string>(),
+                // RunContinuationsAsynchronously: TrySetResult is called from
+                // Execute on Revit's UI thread; without this flag the pipe
+                // thread's await continuations (including the pipe write) run
+                // inline on the UI thread, so a stalled client blocks Revit.
+                CompletionSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously),
                 CancellationToken = cancellationToken,
                 QueuedAt = DateTime.UtcNow
             };
