@@ -104,71 +104,52 @@ namespace RevitMCPBridge
                     var errors = new List<string>();
                     var geoOptions = new Options() { ComputeReferences = true, View = activeView };
 
+                    // Both dimensions now reference REAL WALL FACES (the face
+                    // away from the room — outside-to-outside, per the
+                    // never-centerline standard). Previously this method
+                    // created permanent detail lines and dimensioned those:
+                    // the horizontal dim was wall CENTERLINE by design, and
+                    // none of the dims updated when walls moved.
+
                     // === HORIZONTAL DIMENSION (measures room width) ===
-                    // Place at BOTTOM of room, dimension to WALL CENTERLINE
+                    // Place at BOTTOM of room
                     if (verticalSegments.Count >= 2)
                     {
                         var leftWallSeg = verticalSegments.OrderBy(s => s.x).First();
                         var rightWallSeg = verticalSegments.OrderByDescending(s => s.x).First();
+                        var leftWall = doc.GetElement(leftWallSeg.segment.ElementId) as Wall;
+                        var rightWall = doc.GetElement(rightWallSeg.segment.ElementId) as Wall;
 
-                        // Position at bottom of room (offset slightly inside)
-                        double dimY = bbox.Min.Y + (roomHeight * 0.15); // 15% up from bottom
-                        double lineLength = 1.0;
-
-                        // Adjust positions to wall CENTERLINE
-                        // Boundary is at interior face, centerline is half wall width OUTWARD from room
-                        double leftX = leftWallSeg.x - (leftWallSeg.wallWidth / 2.0);  // Left wall centerline (left of interior)
-                        double rightX = rightWallSeg.x + (rightWallSeg.wallWidth / 2.0);  // Right wall centerline (right of interior)
-
-                        var leftLine = Line.CreateBound(
-                            new XYZ(leftX, dimY - lineLength/2, centerZ),
-                            new XYZ(leftX, dimY + lineLength/2, centerZ)
-                        );
-                        var rightLine = Line.CreateBound(
-                            new XYZ(rightX, dimY - lineLength/2, centerZ),
-                            new XYZ(rightX, dimY + lineLength/2, centerZ)
-                        );
-
-                        var leftDetailLine = doc.Create.NewDetailCurve(activeView, leftLine);
-                        var rightDetailLine = doc.Create.NewDetailCurve(activeView, rightLine);
-
-                        if (leftDetailLine != null && rightDetailLine != null)
+                        if (leftWall != null && rightWall != null)
                         {
+                            // Position at bottom of room (offset slightly inside)
+                            double dimY = bbox.Min.Y + (roomHeight * 0.15); // 15% up from bottom
+
                             var refArray = new ReferenceArray();
-                            refArray.Append(leftDetailLine.GeometryCurve.Reference);
-                            refArray.Append(rightDetailLine.GeometryCurve.Reference);
+                            refArray.Append(GetWallFaceReferenceByDirection(leftWall, geoOptions, new XYZ(-1, 0, 0)));
+                            refArray.Append(GetWallFaceReferenceByDirection(rightWall, geoOptions, new XYZ(1, 0, 0)));
 
                             var dimLine = Line.CreateBound(
-                                new XYZ(leftX, dimY, centerZ),
-                                new XYZ(rightX, dimY, centerZ)
+                                new XYZ(bbox.Min.X, dimY, centerZ),
+                                new XYZ(bbox.Max.X, dimY, centerZ)
                             );
 
                             try
                             {
                                 var dim = doc.Create.NewDimension(activeView, dimLine, refArray);
                                 if (dim != null)
-                                {
                                     dimensionIds.Add((int)dim.Id.Value);
-                                    // KEEP detail lines - dimensions need their references to persist
-                                }
                                 else
-                                {
                                     errors.Add("Horizontal dimension returned null");
-                                    // Delete detail lines only if dimension failed
-                                    doc.Delete(leftDetailLine.Id);
-                                    doc.Delete(rightDetailLine.Id);
-                                }
                             }
                             catch (Exception ex)
                             {
                                 errors.Add($"Horizontal dim error: {ex.Message}");
-                                doc.Delete(leftDetailLine.Id);
-                                doc.Delete(rightDetailLine.Id);
                             }
                         }
                         else
                         {
-                            errors.Add("Could not create detail lines for horizontal dimension");
+                            errors.Add("Bounding walls not found for horizontal dimension");
                         }
                     }
                     else
@@ -177,70 +158,44 @@ namespace RevitMCPBridge
                     }
 
                     // === VERTICAL DIMENSION (measures room height) ===
-                    // Place on RIGHT side of room, dimension to WALL EXTERIOR FACE
+                    // Place on RIGHT side of room
                     if (horizontalSegments.Count >= 2)
                     {
                         var bottomWallSeg = horizontalSegments.OrderBy(s => s.y).First();
                         var topWallSeg = horizontalSegments.OrderByDescending(s => s.y).First();
+                        var bottomWall = doc.GetElement(bottomWallSeg.segment.ElementId) as Wall;
+                        var topWall = doc.GetElement(topWallSeg.segment.ElementId) as Wall;
 
-                        // Position on right side of room (offset slightly inside)
-                        double dimX = bbox.Max.X - (roomWidth * 0.08); // 8% in from right
-                        double lineLength = 1.0;
-
-                        // Adjust positions to wall EXTERIOR FACE
-                        // Boundary is at interior face, exterior is full wall width OUTWARD from room
-                        double bottomY = bottomWallSeg.y - bottomWallSeg.wallWidth;  // Bottom wall exterior (below interior)
-                        double topY = topWallSeg.y + topWallSeg.wallWidth;  // Top wall exterior (above interior)
-
-                        var bottomLine = Line.CreateBound(
-                            new XYZ(dimX - lineLength/2, bottomY, centerZ),
-                            new XYZ(dimX + lineLength/2, bottomY, centerZ)
-                        );
-                        var topLine = Line.CreateBound(
-                            new XYZ(dimX - lineLength/2, topY, centerZ),
-                            new XYZ(dimX + lineLength/2, topY, centerZ)
-                        );
-
-                        var bottomDetailLine = doc.Create.NewDetailCurve(activeView, bottomLine);
-                        var topDetailLine = doc.Create.NewDetailCurve(activeView, topLine);
-
-                        if (bottomDetailLine != null && topDetailLine != null)
+                        if (bottomWall != null && topWall != null)
                         {
+                            // Position on right side of room (offset slightly inside)
+                            double dimX = bbox.Max.X - (roomWidth * 0.08); // 8% in from right
+
                             var refArray = new ReferenceArray();
-                            refArray.Append(bottomDetailLine.GeometryCurve.Reference);
-                            refArray.Append(topDetailLine.GeometryCurve.Reference);
+                            refArray.Append(GetWallFaceReferenceByDirection(bottomWall, geoOptions, new XYZ(0, -1, 0)));
+                            refArray.Append(GetWallFaceReferenceByDirection(topWall, geoOptions, new XYZ(0, 1, 0)));
 
                             var dimLine = Line.CreateBound(
-                                new XYZ(dimX, bottomY, centerZ),
-                                new XYZ(dimX, topY, centerZ)
+                                new XYZ(dimX, bbox.Min.Y, centerZ),
+                                new XYZ(dimX, bbox.Max.Y, centerZ)
                             );
 
                             try
                             {
                                 var dim = doc.Create.NewDimension(activeView, dimLine, refArray);
                                 if (dim != null)
-                                {
                                     dimensionIds.Add((int)dim.Id.Value);
-                                    // KEEP detail lines - dimensions need their references to persist
-                                }
                                 else
-                                {
                                     errors.Add("Vertical dimension returned null");
-                                    // Delete detail lines only if dimension failed
-                                    doc.Delete(bottomDetailLine.Id);
-                                    doc.Delete(topDetailLine.Id);
-                                }
                             }
                             catch (Exception ex)
                             {
                                 errors.Add($"Vertical dim error: {ex.Message}");
-                                doc.Delete(bottomDetailLine.Id);
-                                doc.Delete(topDetailLine.Id);
                             }
                         }
                         else
                         {
-                            errors.Add("Could not create detail lines for vertical dimension");
+                            errors.Add("Bounding walls not found for vertical dimension");
                         }
                     }
                     else
@@ -664,6 +619,53 @@ namespace RevitMCPBridge
                     // Default to wall reference
                     return new Reference(wall);
                 }
+            }
+            catch
+            {
+                return new Reference(wall);
+            }
+        }
+
+        /// <summary>
+        /// Get a reference to the wall side face whose normal best matches the
+        /// given direction. Room-relative selection: unlike exterior/interior
+        /// picking, this is independent of wall.Flipped — pass the direction
+        /// pointing AWAY from (or toward) the room to choose that side's face.
+        /// Falls back to the wall (centerline) reference if no vertical planar
+        /// face aligns.
+        /// </summary>
+        private static Reference GetWallFaceReferenceByDirection(Wall wall, Options geoOptions, XYZ desiredNormal)
+        {
+            try
+            {
+                var geometry = wall.get_Geometry(geoOptions);
+                if (geometry == null) return new Reference(wall);
+
+                Reference bestRef = null;
+                double bestDot = 0.5; // require reasonable alignment with the requested direction
+
+                foreach (var geoObj in geometry)
+                {
+                    Solid solid = geoObj as Solid;
+                    if (solid == null || solid.Faces.Size == 0) continue;
+
+                    foreach (Face face in solid.Faces)
+                    {
+                        PlanarFace planarFace = face as PlanarFace;
+                        if (planarFace == null) continue;
+
+                        if (Math.Abs(planarFace.FaceNormal.Z) > 0.1) continue;
+
+                        double dot = planarFace.FaceNormal.DotProduct(desiredNormal);
+                        if (dot > bestDot)
+                        {
+                            bestDot = dot;
+                            bestRef = planarFace.Reference;
+                        }
+                    }
+                }
+
+                return bestRef ?? new Reference(wall);
             }
             catch
             {
