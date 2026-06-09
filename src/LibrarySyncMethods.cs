@@ -835,7 +835,7 @@ namespace RevitMCPBridge
                         Transform.Identity,
                         copyOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var saveOptions = new SaveAsOptions

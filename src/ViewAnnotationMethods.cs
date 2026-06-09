@@ -213,7 +213,7 @@ namespace RevitMCPBridge
                             view.CropBox = cropBox;
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -414,7 +414,7 @@ namespace RevitMCPBridge
                         var position = new XYZ(x, y, 0);
                         var textNote = TextNote.Create(doc, viewId, position, text, textNoteTypeId);
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -523,7 +523,7 @@ namespace RevitMCPBridge
                         doc.Delete(detailLine1.Id);
                         doc.Delete(detailLine2.Id);
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -689,7 +689,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -764,7 +764,7 @@ namespace RevitMCPBridge
 
                     textNote.Coord = newCoord;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -892,7 +892,7 @@ namespace RevitMCPBridge
                         leader.End = leaderEnd;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -992,7 +992,7 @@ namespace RevitMCPBridge
                     var leader = leaders[leaderIndex];
                     leader.End = leaderEnd;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1071,7 +1071,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1256,7 +1256,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1353,7 +1353,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1598,7 +1598,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.RotateElement(doc, instance.Id, axis, radians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1748,7 +1748,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     ElementTransformUtils.MoveElement(doc, elementId, moveVector);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var newLoc = (element.Location as LocationPoint)?.Point ?? XYZ.Zero;
@@ -1811,7 +1811,7 @@ namespace RevitMCPBridge
                     var axis = Line.CreateBound(loc, loc + XYZ.BasisZ);
                     var radians = angle * Math.PI / 180.0;
                     ElementTransformUtils.RotateElement(doc, elementId, axis, radians);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1910,7 +1910,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2046,7 +2046,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2192,7 +2192,7 @@ namespace RevitMCPBridge
 
                     var filledRegion = FilledRegion.Create(doc, typeId, viewId, curveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2710,7 +2710,7 @@ namespace RevitMCPBridge
 
                     var filledRegion = FilledRegion.Create(doc, typeId, viewId, curveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2977,7 +2977,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -3436,7 +3436,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -3664,7 +3664,7 @@ namespace RevitMCPBridge
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3895,7 +3895,7 @@ namespace RevitMCPBridge
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4040,7 +4040,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4160,7 +4160,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4422,7 +4422,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4583,7 +4583,7 @@ namespace RevitMCPBridge
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4723,7 +4723,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4826,7 +4826,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4929,7 +4929,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -5068,7 +5068,7 @@ namespace RevitMCPBridge
                         if (anyChanged) matchedCount++;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -5299,7 +5299,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -5448,7 +5448,7 @@ namespace RevitMCPBridge
                         if (updated) elementsUpdated++;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

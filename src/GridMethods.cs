@@ -57,7 +57,7 @@ namespace RevitMCPBridge
                         grid.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -111,7 +111,7 @@ namespace RevitMCPBridge
                         grid.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -241,7 +241,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     grid.Name = newName;
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -282,7 +282,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(gridId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedGridId = gridId.Value });
                 }
@@ -360,7 +360,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -439,7 +439,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

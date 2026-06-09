@@ -970,7 +970,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1060,7 +1060,7 @@ namespace RevitMCPBridge
                     // For now, we'll just track in memory and return success
                     // In production, would use Extensible Storage or shared parameters
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Add to in-memory database for this session
@@ -1859,7 +1859,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     guideGridParam.Set(new ElementId(gridIdLong));
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1983,7 +1983,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2055,7 +2055,7 @@ namespace RevitMCPBridge
                         guideGridParam.Set(ElementId.InvalidElementId);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2143,7 +2143,7 @@ namespace RevitMCPBridge
                     // Then delete the guide grid element
                     doc.Delete(new ElementId(gridIdLong));
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2759,7 +2759,7 @@ namespace RevitMCPBridge
                     // Move to target position
                     viewport.SetBoxCenter(new XYZ(targetX, targetY, 0));
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2910,7 +2910,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

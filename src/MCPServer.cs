@@ -5333,7 +5333,7 @@ namespace RevitMCPBridge
                                     break;
                             }
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return JsonConvert.SerializeObject(new
                             {
@@ -5689,7 +5689,7 @@ namespace RevitMCPBridge
                             var position = new XYZ(x, y, z);
                             var textNote = TextNote.Create(doc, viewId, position, text, textNoteType.Id);
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return JsonConvert.SerializeObject(new
                             {
@@ -5764,7 +5764,7 @@ namespace RevitMCPBridge
                         try
                         {
                             textNote.Text = newText;
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return JsonConvert.SerializeObject(new
                             {
@@ -5836,7 +5836,7 @@ namespace RevitMCPBridge
                         try
                         {
                             doc.Delete(elementId);
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return JsonConvert.SerializeObject(new
                             {
@@ -5938,7 +5938,7 @@ namespace RevitMCPBridge
                     {
                         trans.Start();
                         textNote.ChangeTypeId(closestType.Id);
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     var newSize = closestType.get_Parameter(BuiltInParameter.TEXT_SIZE)?.AsDouble() ?? 0;
@@ -6122,7 +6122,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     return JsonConvert.SerializeObject(new
@@ -6218,7 +6218,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     return JsonConvert.SerializeObject(new

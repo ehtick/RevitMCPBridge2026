@@ -231,7 +231,7 @@ namespace RevitMCPBridge2026
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     phase.Name = newName;
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -331,7 +331,7 @@ namespace RevitMCPBridge2026
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(phaseId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -471,7 +471,7 @@ namespace RevitMCPBridge2026
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     phaseCreatedParam.Set(phaseId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -575,7 +575,7 @@ namespace RevitMCPBridge2026
                         phaseDemolishedParam.Set(phaseId);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -896,7 +896,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1069,7 +1069,7 @@ namespace RevitMCPBridge2026
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(filterId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1164,7 +1164,7 @@ namespace RevitMCPBridge2026
 
                     phaseParam.Set(phaseId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1249,7 +1249,7 @@ namespace RevitMCPBridge2026
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     phaseFilterParam.Set(phaseFilterId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1847,7 +1847,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2134,7 +2134,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Categorize demolished elements

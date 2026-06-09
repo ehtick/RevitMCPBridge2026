@@ -28,7 +28,7 @@ namespace RevitMCPBridge
                     trans.Start();
 
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

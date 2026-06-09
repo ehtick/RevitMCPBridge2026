@@ -232,7 +232,7 @@ namespace RevitMCPBridge
                         SpecTypeId.Number,
                         isInstance);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -297,7 +297,7 @@ namespace RevitMCPBridge
                     var newType = familyManager.NewType(typeName);
                     familyManager.CurrentType = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -374,7 +374,7 @@ namespace RevitMCPBridge
                             break;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -433,7 +433,7 @@ namespace RevitMCPBridge
                         refPlane.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -519,7 +519,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.MoveElement(doc, extrusion.Id, new XYZ(0, 0, startOffset));
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -615,7 +615,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -923,7 +923,7 @@ namespace RevitMCPBridge
                     var line = Line.CreateBound(startPoint, endPoint);
                     var modelLine = doc.FamilyCreate.NewModelCurve(line, sketchPlane);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1019,7 +1019,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1082,7 +1082,7 @@ namespace RevitMCPBridge
                     var line = Line.CreateBound(startPoint, endPoint);
                     var symbolicLine = doc.FamilyCreate.NewSymbolicCurve(line, doc.ActiveView.SketchPlane);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1167,7 +1167,7 @@ namespace RevitMCPBridge
 
                     var modelArc = doc.FamilyCreate.NewModelCurve(arc, sketchPlane);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1313,7 +1313,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     doc.Delete(id);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1395,7 +1395,7 @@ namespace RevitMCPBridge
                     // Associate the element's visibility with the family parameter
                     familyManager.AssociateElementParameterToFamilyParameter(visParam, familyParam);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1534,7 +1534,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     curveElement.LineStyle = lineStyle;
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1939,7 +1939,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2063,7 +2063,7 @@ namespace RevitMCPBridge
                         var dim = doc.FamilyCreate.NewDimension(doc.ActiveView, dimLine, refArray);
                         dim.IsLocked = true;
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -2262,7 +2262,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     ElementTransformUtils.MoveElement(doc, element.Id, translation);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

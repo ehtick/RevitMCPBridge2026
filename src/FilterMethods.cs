@@ -57,7 +57,7 @@ namespace RevitMCPBridge2026
                     // Note: If no rules provided, create with empty rules (can be added later)
                     ParameterFilterElement filter = ParameterFilterElement.Create(doc, filterName, categoryIds);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", (int)filter.Id.Value)
@@ -232,7 +232,7 @@ namespace RevitMCPBridge2026
                         filter.SetCategories(categoryIds);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", filterIdInt)
@@ -281,7 +281,7 @@ namespace RevitMCPBridge2026
 
                     ICollection<ElementId> deletedIds = doc.Delete(filterId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("deletedFilterId", filterIdInt)
@@ -440,7 +440,7 @@ namespace RevitMCPBridge2026
                     var newFilter = new ElementParameterFilter(rules);
                     filter.SetElementFilter(newFilter);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", filterIdInt)
@@ -592,7 +592,7 @@ namespace RevitMCPBridge2026
                         filter.ClearRules();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", filterIdInt)
@@ -662,7 +662,7 @@ namespace RevitMCPBridge2026
                     bool visible = parameters["visible"]?.ToObject<bool>() ?? true;
                     view.SetFilterVisibility(filterId, visible);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", viewIdInt)
@@ -715,7 +715,7 @@ namespace RevitMCPBridge2026
 
                     view.RemoveFilter(filterId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", viewIdInt)
@@ -857,7 +857,7 @@ namespace RevitMCPBridge2026
 
                     view.SetFilterOverrides(filterId, overrides);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", viewIdInt)
@@ -1337,7 +1337,7 @@ namespace RevitMCPBridge2026
                     // Set the updated categories
                     filter.SetCategories(allCategories);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", filterIdInt)
@@ -1411,7 +1411,7 @@ namespace RevitMCPBridge2026
                     // Set the updated categories
                     filter.SetCategories(remainingCategories);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     int removedCount = existingCategories.Count - remainingCategories.Count;
 
@@ -1507,7 +1507,7 @@ namespace RevitMCPBridge2026
 
                     ParameterFilterElement filter = ParameterFilterElement.Create(doc, filterName, categoryIds);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("filterId", (int)filter.Id.Value)
@@ -1571,7 +1571,7 @@ namespace RevitMCPBridge2026
                         newFilter.SetElementFilter(elementFilter);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalFilterId", filterIdInt)

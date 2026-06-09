@@ -79,7 +79,7 @@ namespace RevitMCPBridge
 
                     var wall = Wall.Create(doc, line, wallType.Id, level.Id, height, 0, false, false);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)
@@ -157,7 +157,7 @@ namespace RevitMCPBridge
                         wallIds.Add((int)wall.Id.Value);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallCount", wallIds.Count)
@@ -354,7 +354,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)
@@ -469,7 +469,7 @@ namespace RevitMCPBridge
                     // Delete the original wall
                     doc.Delete(wallId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalWallId", (int)wallId.Value)
@@ -514,7 +514,7 @@ namespace RevitMCPBridge
                     // Join the walls at their common endpoint
                     JoinGeometryUtils.JoinGeometry(doc, wall1, wall2);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wall1Id", (int)wall1Id.Value)
@@ -558,7 +558,7 @@ namespace RevitMCPBridge
 
                     JoinGeometryUtils.UnjoinGeometry(doc, wall1, wall2);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wall1Id", (int)wall1Id.Value)
@@ -755,7 +755,7 @@ namespace RevitMCPBridge
 
                     var newType = sourceType.Duplicate(newTypeName) as WallType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("newTypeId", (int)newType.Id.Value)
@@ -876,7 +876,7 @@ namespace RevitMCPBridge
                     structure.SetLayerWidth(adjustableLayerIndex, adjustableWidth);
                     targetType.SetCompoundStructure(structure);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -947,7 +947,7 @@ namespace RevitMCPBridge
 
                     var opening = doc.Create.NewOpening(wall, p1, p2);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("openingId", (int)opening.Id.Value)
@@ -989,7 +989,7 @@ namespace RevitMCPBridge
 
                     wall.Flip();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wallId.Value)
@@ -1023,7 +1023,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(wallId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wallId.Value)
@@ -1133,7 +1133,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("createdCount", createdWalls.Count)
@@ -1192,7 +1192,7 @@ namespace RevitMCPBridge
 
                     wall.WallType = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wallId.Value)
@@ -1257,7 +1257,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("modifiedCount", modifiedCount)
@@ -1428,7 +1428,7 @@ namespace RevitMCPBridge
                             targetType.get_Parameter(BuiltInParameter.FUNCTION_PARAM)?.Set(wf);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1509,7 +1509,7 @@ namespace RevitMCPBridge
                     // Set the new curve
                     locationCurve.Curve = newLine;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get updated curve
                     var updatedCurve = (wall.Location as LocationCurve).Curve;
@@ -1651,7 +1651,7 @@ namespace RevitMCPBridge
 
                     locationCurve.Curve = newLine;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var updatedCurve = (wall.Location as LocationCurve).Curve;
 
@@ -1774,7 +1774,7 @@ namespace RevitMCPBridge
 
                     locationCurve.Curve = newLine;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var updatedCurve = (wall.Location as LocationCurve).Curve;
 
@@ -1866,7 +1866,7 @@ namespace RevitMCPBridge
 
                     locationCurve.Curve = newLine;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var updatedCurve = (wall.Location as LocationCurve).Curve;
                     var updatedStart = updatedCurve.GetEndPoint(0);
@@ -2215,7 +2215,7 @@ namespace RevitMCPBridge
                     XYZ actIntStart = actStart - perpDir * halfWidth;
                     XYZ actIntEnd = actEnd - perpDir * halfWidth;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

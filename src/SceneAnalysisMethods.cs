@@ -465,7 +465,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     catch
                     {
@@ -521,7 +521,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     catch
                     {

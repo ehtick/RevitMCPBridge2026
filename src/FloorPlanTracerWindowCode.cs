@@ -1399,7 +1399,7 @@ namespace RevitMCPBridge
                                 }
                             }
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
                     }
                 }

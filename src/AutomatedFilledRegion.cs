@@ -89,7 +89,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -273,7 +273,7 @@ namespace RevitMCPBridge
                     // Calculate area
                     var area = CalculateCurveLoopArea(curveLoop);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

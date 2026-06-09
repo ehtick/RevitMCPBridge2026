@@ -123,7 +123,7 @@ namespace RevitMCPBridge
 
                     var instance = RevitLinkInstance.Create(doc, linkLoadResult.ElementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -240,7 +240,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(linkTypeId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedLinkTypeId = linkTypeId.Value });
                 }
@@ -355,7 +355,7 @@ namespace RevitMCPBridge
                         doc.Import(filePath, options, view, out importedId);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -397,7 +397,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(importId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedImportId = importId.Value });
                 }
@@ -483,7 +483,7 @@ namespace RevitMCPBridge
                     var moveVector = new XYZ(translation[0], translation[1], translation.Length > 2 ? translation[2] : 0);
                     ElementTransformUtils.MoveElement(doc, linkInstance.Id, moveVector);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1574,7 +1574,7 @@ namespace RevitMCPBridge
 
                     var imageInstance = ImageInstance.Create(doc, view, imageType.Id, placementOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     double widthFeet = 0, heightFeet = 0;
                     var imgBbox = imageInstance.get_BoundingBox(view);

@@ -493,7 +493,7 @@ namespace RevitMCPBridge
 
                     roof.ChangeTypeId(newTypeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -541,7 +541,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(roofId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -601,7 +601,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error("Cannot set offset on this roof type", "INVALID_OPERATION").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -688,7 +688,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error($"Edge index {edgeIndex} not found. Roof has {currentIndex} edges.", "INVALID_INDEX").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -790,7 +790,7 @@ namespace RevitMCPBridge
                     if (fascia != null)
                         createdIds.Add((int)fascia.Id.Value);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -885,7 +885,7 @@ namespace RevitMCPBridge
 
                     var gutter = doc.Create.NewGutter(gutterType as GutterType, referenceArray);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -994,7 +994,7 @@ namespace RevitMCPBridge
                     // Note: Soffit creation in Revit API requires specific face/edge setup
                     // The doc.Create.NewSlab method or manual floor creation at soffit elevation
                     // is often the practical approach for soffits
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1054,7 +1054,7 @@ namespace RevitMCPBridge
 
                     var newType = sourceType.Duplicate(newName) as RoofType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

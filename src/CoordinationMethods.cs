@@ -883,7 +883,7 @@ namespace RevitMCPBridge
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)view3d.Id.Value, viewName, "ThreeD")
@@ -1007,7 +1007,7 @@ namespace RevitMCPBridge
                             var deletedName = doc.GetElement(elemToDelete)?.Name ?? "Unknown";
                             doc.Delete(elemToDelete);
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return ResponseBuilder.Success()
                                 .With("strategy", strategy)
@@ -1032,7 +1032,7 @@ namespace RevitMCPBridge
                             var deletedName = doc.GetElement(elemToDelete)?.Name ?? "Unknown";
                             doc.Delete(elemToDelete);
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             return ResponseBuilder.Success()
                                 .With("strategy", strategy)
@@ -1959,7 +1959,7 @@ namespace RevitMCPBridge
                         highlightedCount++;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView(viewId, view.Name, view.ViewType.ToString())

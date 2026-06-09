@@ -2127,7 +2127,7 @@ namespace RevitMCPBridge
                             {
                                 trans.Start();
                                 _doc.Delete(elemId);
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
                             StatusText.Text = "Wall deleted from Revit.";
                         }
@@ -3044,7 +3044,7 @@ namespace RevitMCPBridge
                     {
                         trans.Start();
                         _doc.Delete(elemId);
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     StatusText.Text = "Undo: Element deleted.";
                 }
@@ -4966,7 +4966,7 @@ namespace RevitMCPBridge
                         DrawnWalls[WallIndex].RevitElementId = (int)wall.Id.Value;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch (Exception ex)
@@ -5049,7 +5049,7 @@ namespace RevitMCPBridge
                         PlacedDoors[DoorIndex].RevitElementId = (int)door.Id.Value;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch (Exception ex)
@@ -5133,7 +5133,7 @@ namespace RevitMCPBridge
                         PlacedWindows[WindowIndex].RevitElementId = (int)window.Id.Value;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch (Exception ex)
@@ -5228,7 +5228,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch (Exception ex)
@@ -5284,7 +5284,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch (Exception ex)

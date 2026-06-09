@@ -168,7 +168,7 @@ namespace RevitMCPBridge
                         group.GroupType.Name = groupName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -226,7 +226,7 @@ namespace RevitMCPBridge
                     var location = new XYZ(x.Value, y.Value, z);
                     var group = doc.Create.PlaceGroup(location, groupType);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -274,7 +274,7 @@ namespace RevitMCPBridge
 
                     var memberIds = group.UngroupMembers();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -315,7 +315,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(groupTypeId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedGroupTypeId = groupTypeId.Value });
                 }
@@ -359,7 +359,7 @@ namespace RevitMCPBridge
 
                     groupType.Name = newName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -408,7 +408,7 @@ namespace RevitMCPBridge
 
                     var duplicatedType = groupType.Duplicate(newName ?? (groupType.Name + " Copy"));
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -619,7 +619,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

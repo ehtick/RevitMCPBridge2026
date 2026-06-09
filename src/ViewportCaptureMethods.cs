@@ -354,7 +354,7 @@ namespace RevitMCPBridge
                         // Keep it active but adjust if needed
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Return new camera state
@@ -536,7 +536,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -707,7 +707,7 @@ namespace RevitMCPBridge
 
                     view3d.Name = viewName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var orient = view3d.GetOrientation();

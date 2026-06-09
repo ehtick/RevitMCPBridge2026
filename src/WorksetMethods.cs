@@ -61,7 +61,7 @@ namespace RevitMCPBridge2026
                     // Create new workset
                     var workset = Workset.Create(doc, worksetName);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -244,7 +244,7 @@ namespace RevitMCPBridge2026
                     WorksetTable.RenameWorkset(doc, worksetId, newName);
                     var workset = doc.GetWorksetTable().GetWorkset(worksetId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -289,7 +289,7 @@ namespace RevitMCPBridge2026
                     var settings = new DeleteWorksetSettings(DeleteWorksetOption.MoveElementsToWorkset, targetWorksetId);
                     WorksetTable.DeleteWorkset(doc, worksetId, settings);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -349,7 +349,7 @@ namespace RevitMCPBridge2026
                         return Newtonsoft.Json.JsonConvert.SerializeObject(new { success = false, error = "Element workset parameter is read-only or not available" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -508,7 +508,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -596,7 +596,7 @@ namespace RevitMCPBridge2026
                     }
 
                     view.SetWorksetVisibility(worksetId, worksetVis);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1016,7 +1016,7 @@ namespace RevitMCPBridge2026
 
                     doc.EnableWorksharing(defaultWorksetName, "Shared Levels and Grids");
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var worksets = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset);
                     var worksetList = new System.Collections.Generic.List<object>();
@@ -1531,7 +1531,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -1932,7 +1932,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new

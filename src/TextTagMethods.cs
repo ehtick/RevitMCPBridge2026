@@ -159,7 +159,7 @@ namespace RevitMCPBridge
 
                     var textNote = TextNote.Create(doc, viewId, point, text, options);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get text type info for response
                     var usedTextType = doc.GetElement(textTypeId) as TextNoteType;
@@ -234,7 +234,7 @@ namespace RevitMCPBridge
                         modified.Add("type");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -295,7 +295,7 @@ namespace RevitMCPBridge
                         TagOrientation.Horizontal,
                         point);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -357,7 +357,7 @@ namespace RevitMCPBridge
                         TagOrientation.Horizontal,
                         point);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -428,7 +428,7 @@ namespace RevitMCPBridge
                     // For now, create a simple text note without leader
                     // TODO: Implement new leader API if needed
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -667,7 +667,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(textNoteId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -703,7 +703,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(tagId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -822,7 +822,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -893,7 +893,7 @@ namespace RevitMCPBridge
                         modified.Add("location");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1030,7 +1030,7 @@ namespace RevitMCPBridge
                     var oldTypeId = tag.GetTypeId();
                     tag.ChangeTypeId(targetTypeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var newType = doc.GetElement(targetTypeId);
                     return JsonConvert.SerializeObject(new
@@ -1367,7 +1367,7 @@ namespace RevitMCPBridge
 
                     var textNote = TextNote.Create(doc, viewId, point, text, options);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var usedTextType = doc.GetElement(textTypeId) as TextNoteType;
 

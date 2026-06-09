@@ -537,7 +537,7 @@ namespace RevitMCPBridge
                                 }
                             }
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
 
                             undoActions.Add(new { summary = $"Deleted {deletedCount} elements" });
                         }
@@ -661,7 +661,7 @@ namespace RevitMCPBridge
                     failureOptions.SetFailuresPreprocessor(new WarningSwallower());
                     trans.SetFailureHandlingOptions(failureOptions);
                     var deleted = doc.Delete(elementId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Record for undo (even though we can't truly undo a delete)
                     _operationHistory.Add(new OperationRecord
@@ -784,7 +784,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     // Verify if requested

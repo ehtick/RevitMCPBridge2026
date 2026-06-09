@@ -83,7 +83,7 @@ namespace RevitMCPBridge
                     revision.IssuedBy = issuedBy;
                     revision.IssuedTo = issuedTo;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -143,7 +143,7 @@ namespace RevitMCPBridge
                     if (parameters["issuedTo"] != null)
                         revision.IssuedTo = parameters["issuedTo"].ToString();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -192,7 +192,7 @@ namespace RevitMCPBridge
 
                     revision.Issued = true;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -233,7 +233,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(revisionId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedRevisionId = revisionId.Value });
                 }
@@ -351,7 +351,7 @@ namespace RevitMCPBridge
 
                     var cloud = RevisionCloud.Create(doc, view, revision.Id, curves);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -393,7 +393,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(cloudId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedCloudId = cloudId.Value });
                 }
@@ -499,7 +499,7 @@ namespace RevitMCPBridge
 
                     sheet.SetAdditionalRevisionIds(existingRevisions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -552,7 +552,7 @@ namespace RevitMCPBridge
                     existingRevisions.RemoveAll(id => idsToRemove.Contains(id));
                     sheet.SetAdditionalRevisionIds(existingRevisions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -611,7 +611,7 @@ namespace RevitMCPBridge
 
                     revision.Visibility = visibilityEnum;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -654,7 +654,7 @@ namespace RevitMCPBridge
                     var ids = revisionIds.Select(id => new ElementId(id)).ToList();
                     Revision.ReorderRevisionSequence(doc, ids);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

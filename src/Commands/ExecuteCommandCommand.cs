@@ -76,7 +76,7 @@ namespace RevitMCPBridge.Commands
                         {
                             trans.Start();
                             // PurgeUnused not available in API
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
                         return "Purged unused elements";
                         

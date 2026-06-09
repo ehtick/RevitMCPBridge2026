@@ -100,7 +100,7 @@ namespace RevitMCPBridge2026
                     var familySymbolIds = loadedFamily.GetFamilySymbolIds();
                     var typeCount = familySymbolIds.Count;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -237,7 +237,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var successCount = results.Count(r => ((dynamic)r).success == true);
@@ -339,7 +339,7 @@ namespace RevitMCPBridge2026
                     // We can't directly reload, but we showed how to open and close
                     // For a true reload, user would need to provide the file path
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -437,7 +437,7 @@ namespace RevitMCPBridge2026
 
                     doc.Delete(familySymbol.Id);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1000,7 +1000,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1130,7 +1130,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1223,7 +1223,7 @@ namespace RevitMCPBridge2026
                     // Rename the symbol
                     symbol.Name = newName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1332,7 +1332,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, instance.Id, axis, rotation * Math.PI / 180.0);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get instance location for confirmation
                     var instanceLocation = (instance.Location as LocationPoint)?.Point;
@@ -1674,7 +1674,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get current location for confirmation
                     var currentLocation = (instance.Location as LocationPoint)?.Point;
@@ -1774,7 +1774,7 @@ namespace RevitMCPBridge2026
                     // Change the type
                     instance.ChangeTypeId(newTypeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1850,7 +1850,7 @@ namespace RevitMCPBridge2026
                     // Delete the instance
                     doc.Delete(instanceId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2111,7 +2111,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get the actual value after setting (for confirmation)
                     string actualValue = param.AsValueString() ?? param.AsString() ?? value;
@@ -2724,7 +2724,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2883,7 +2883,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3291,7 +3291,7 @@ namespace RevitMCPBridge2026
 
                         if (wasLoaded && loadedFamily != null)
                         {
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
                         else
                         {
@@ -3526,7 +3526,7 @@ namespace RevitMCPBridge2026
 
                             if (wasLoaded && loadedFamily != null)
                             {
-                                trans.Commit();
+                                trans.CommitAndCheck();
                                 results.Add(new
                                 {
                                     familyName = name,
@@ -3797,7 +3797,7 @@ namespace RevitMCPBridge2026
                     // Set the new text
                     targetLabel.Text = newText;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3998,7 +3998,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -4248,7 +4248,7 @@ namespace RevitMCPBridge2026
 
                     if (loadedFamily != null)
                     {
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     else
                     {
@@ -4459,7 +4459,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
                 else if (dryRun)

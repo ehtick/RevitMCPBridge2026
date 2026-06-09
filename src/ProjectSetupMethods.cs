@@ -74,7 +74,7 @@ namespace RevitMCPBridge
                         level.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -110,7 +110,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(levelId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -183,7 +183,7 @@ namespace RevitMCPBridge
                             projectInfo.Name = projectName;
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -320,7 +320,7 @@ namespace RevitMCPBridge
                         grid.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -369,7 +369,7 @@ namespace RevitMCPBridge
                         grid.Name = name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -438,7 +438,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(gridId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -502,7 +502,7 @@ namespace RevitMCPBridge
 
                     var topo = TopographySurface.Create(doc, points);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -561,7 +561,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -634,7 +634,7 @@ namespace RevitMCPBridge
                     var curveLoops = new List<CurveLoop> { curveLoop };
                     var pad = BuildingPad.Create(doc, padType.Id, levelId, curveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -678,7 +678,7 @@ namespace RevitMCPBridge
                     var copiedIds = ElementTransformUtils.CopyElements(
                         doc, elementIds, vector);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -718,7 +718,7 @@ namespace RevitMCPBridge
                     var vector = new XYZ(translation[0], translation[1], translation[2]);
                     ElementTransformUtils.MoveElements(doc, elementIds, vector);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -761,7 +761,7 @@ namespace RevitMCPBridge
 
                     ElementTransformUtils.RotateElements(doc, elementIds, axis, radians);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -805,7 +805,7 @@ namespace RevitMCPBridge
 
                     ElementTransformUtils.MirrorElements(doc, elementIds, plane, true);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -853,7 +853,7 @@ namespace RevitMCPBridge
                         allCopiedIds.AddRange(copiedIds);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -891,7 +891,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(elementIds);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -995,7 +995,7 @@ namespace RevitMCPBridge
                         Transform.Identity,
                         copyOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1201,7 +1201,7 @@ namespace RevitMCPBridge
                         Transform.Identity,
                         copyOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1300,7 +1300,7 @@ namespace RevitMCPBridge
                         group.GroupType.Name = groupName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1351,7 +1351,7 @@ namespace RevitMCPBridge
                     var point = new XYZ(location[0], location[1], location[2]);
                     var group = doc.Create.PlaceGroup(point, groupType);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1431,7 +1431,7 @@ namespace RevitMCPBridge
 
                     var memberIds = group.UngroupMembers();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1538,7 +1538,7 @@ namespace RevitMCPBridge
                     var translation = newPosition - currentPos;
                     ElementTransformUtils.MoveElement(doc, basePoint.Id, translation);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1618,7 +1618,7 @@ namespace RevitMCPBridge
                     var translation = newPosition - currentPos;
                     ElementTransformUtils.MoveElement(doc, surveyPoint.Id, translation);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1685,7 +1685,7 @@ namespace RevitMCPBridge
                     var line = Line.CreateBound(start, end);
                     var modelLine = doc.Create.NewModelCurve(line, sketchPlane);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1752,7 +1752,7 @@ namespace RevitMCPBridge
                     var line = Line.CreateBound(start, end);
                     var detailLine = doc.Create.NewDetailCurve(view, line);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1912,7 +1912,7 @@ namespace RevitMCPBridge
                         Transform.Identity,
                         copyOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2247,7 +2247,7 @@ namespace RevitMCPBridge
                     }
                     var modelText = doc.FamilyCreate.NewModelText(text, modelTextType, sketchPlane, position, horizontalAlign, depth);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

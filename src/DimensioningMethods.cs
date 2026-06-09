@@ -119,7 +119,7 @@ namespace RevitMCPBridge
                     // Create the dimension
                     var dimension = doc.Create.NewDimension(view, dimLine, refArray);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     Log.Information($"Created linear dimension in view {viewId.Value}");
 
@@ -603,7 +603,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Created {dimensionedCount} dimension strings for {walls.Count} walls in view {viewId.Value}");
@@ -838,7 +838,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Dimensioned {dimensionedCount} of {doors.Count} doors in view {viewId.Value}");
@@ -961,7 +961,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(dimensionId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Deleted dimension {dimensionId.Value}");
@@ -1289,7 +1289,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Build success message
                     var refTypesList = string.Join(", ", refTypeCounts.Select(kvp => $"{kvp.Value} {kvp.Key}"));
@@ -1501,7 +1501,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1636,7 +1636,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1752,7 +1752,7 @@ namespace RevitMCPBridge
                         catch { /* Skip dimensions that fail */ }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1881,7 +1881,7 @@ namespace RevitMCPBridge
                         catch { /* Dimension creation may fail for invalid geometry */ }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 if (eqDimension == null)
@@ -2455,7 +2455,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get segment values for response
                     var segmentValues = new List<string>();
@@ -2673,7 +2673,7 @@ namespace RevitMCPBridge
                         modifications.Add(modResult);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Modified dimension text for {dimensionId.Value}");
@@ -2890,7 +2890,7 @@ namespace RevitMCPBridge
 
                     dimension.DimensionType = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Changed dimension {dimensionId.Value} type from '{previousTypeName}' to '{newType.Name}'");
@@ -3048,7 +3048,7 @@ namespace RevitMCPBridge
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create new dimension" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get segment values
                     var segmentValues = new List<string>();
@@ -3200,7 +3200,7 @@ namespace RevitMCPBridge
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create new dimension" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get segment values
                     var segmentValues = new List<string>();

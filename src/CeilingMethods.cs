@@ -432,7 +432,7 @@ namespace RevitMCPBridge
 
                     ceiling.ChangeTypeId(newTypeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -480,7 +480,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(ceilingId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -540,7 +540,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error("Cannot set height on this ceiling", "INVALID_OPERATION").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -617,7 +617,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -681,7 +681,7 @@ namespace RevitMCPBridge
 
                     var opening = doc.Create.NewOpening(ceiling, curveArray, true);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -742,7 +742,7 @@ namespace RevitMCPBridge
 
                     var newType = sourceType.Duplicate(newName) as CeilingType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -875,7 +875,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -967,7 +967,7 @@ namespace RevitMCPBridge
                         heightParam.Set(heightOffset);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var areaParam = ceiling.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED);
                     double area = areaParam != null ? areaParam.AsDouble() : 0;

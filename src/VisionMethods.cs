@@ -199,7 +199,7 @@ namespace RevitMCPBridge
                         view.UnhideElements(ids);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -267,7 +267,7 @@ namespace RevitMCPBridge
 
                     view.SetCategoryHidden(category.Id, !visible);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -409,7 +409,7 @@ namespace RevitMCPBridge
                         view.SetElementOverrides(id, overrides);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -534,7 +534,7 @@ namespace RevitMCPBridge
 
                     view.SetViewRange(viewRange);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -579,7 +579,7 @@ namespace RevitMCPBridge
                     {
                         trans.Start();
                         view.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     return JsonConvert.SerializeObject(new
@@ -601,7 +601,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     view.IsolateElementsTemporary(ids);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -673,7 +673,7 @@ namespace RevitMCPBridge
                         view.IsSectionBoxActive = true;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

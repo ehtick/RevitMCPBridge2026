@@ -162,7 +162,7 @@ namespace RevitMCPBridge2026
                         underlineParam.Set(0);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -376,7 +376,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -569,7 +569,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     // Save the file
@@ -885,7 +885,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1026,7 +1026,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1121,7 +1121,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

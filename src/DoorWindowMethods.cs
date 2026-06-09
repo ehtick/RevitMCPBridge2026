@@ -392,7 +392,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("elementId", (int)element.Id.Value)
@@ -444,7 +444,7 @@ namespace RevitMCPBridge
                         element.flipFacing();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("elementId", (int)elementId.Value)
@@ -652,7 +652,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(elementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithElementId((int)elementId.Value)
@@ -1350,7 +1350,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("doorId", doorIdInt)
@@ -1443,7 +1443,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("windowId", windowIdInt)
@@ -1504,7 +1504,7 @@ namespace RevitMCPBridge
 
                     door.Symbol = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("doorId", doorIdInt)
@@ -1566,7 +1566,7 @@ namespace RevitMCPBridge
 
                     window.Symbol = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("windowId", windowIdInt)
@@ -1633,7 +1633,7 @@ namespace RevitMCPBridge
                         facingFlipped = true;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("doorId", doorIdInt)
@@ -1700,7 +1700,7 @@ namespace RevitMCPBridge
 
                     locationPoint.Point = newPoint;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("doorId", doorIdInt)
@@ -1765,7 +1765,7 @@ namespace RevitMCPBridge
 
                     locationPoint.Point = newPoint;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("windowId", windowIdInt)
@@ -1813,7 +1813,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(door.Id);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("deletedDoorId", doorIdInt)
@@ -1861,7 +1861,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(window.Id);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("deletedWindowId", windowIdInt)
@@ -2213,7 +2213,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("placedCount", placed.Count)
@@ -2361,7 +2361,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("placedCount", placed.Count)

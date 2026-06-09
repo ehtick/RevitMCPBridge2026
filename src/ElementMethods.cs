@@ -287,7 +287,7 @@ namespace RevitMCPBridge
 
                     ElementTransformUtils.MoveElement(doc, elementId, translation);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get new location
                     XYZ newLocation = null;
@@ -372,7 +372,7 @@ namespace RevitMCPBridge
 
                     ElementTransformUtils.MoveElements(doc, elementIds, translation);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -738,7 +738,7 @@ namespace RevitMCPBridge
                         elementIds,
                         translation);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -790,7 +790,7 @@ namespace RevitMCPBridge
 
                     var deletedIds = doc.Delete(elementIds);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -852,7 +852,7 @@ namespace RevitMCPBridge
 
                     var deletedIds = doc.Delete(elementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -989,7 +989,7 @@ namespace RevitMCPBridge
 
                             if (loaded && family != null)
                             {
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
                             else
                             {
@@ -1799,7 +1799,7 @@ namespace RevitMCPBridge
                         mirroredIds = elemIds;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1916,7 +1916,7 @@ namespace RevitMCPBridge
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2094,7 +2094,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2160,7 +2160,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.RotateElement(doc, elemId, rotationAxis, angleRadians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

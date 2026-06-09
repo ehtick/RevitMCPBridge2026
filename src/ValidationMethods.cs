@@ -1545,7 +1545,7 @@ namespace RevitMCPBridge
                     }
 
                     newViewId = view3D.Id;
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2148,7 +2148,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

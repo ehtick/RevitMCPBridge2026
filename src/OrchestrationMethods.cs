@@ -75,7 +75,7 @@ namespace RevitMCPBridge
                         legendView = ViewDrafting.Create(doc, legendViewFamilyType.Id);
                         legendView.Name = "LIFE SAFETY LEGEND";
                         legendView.Scale = parameters["scale"]?.ToObject<int>() ?? 96;
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     viewId = legendView.Id;
                     results.Add(new { step = "createView", viewId = (int)viewId.Value, viewName = legendView.Name });
@@ -181,7 +181,7 @@ namespace RevitMCPBridge
                         yOffset -= rowSpacing;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 results.Add(new
@@ -290,7 +290,7 @@ namespace RevitMCPBridge
                         legendView = ViewDrafting.Create(doc, legendViewFamilyType.Id);
                         legendView.Name = "AREA CALCULATION";
                         legendView.Scale = parameters["scale"]?.ToObject<int>() ?? 48;
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     viewId = legendView.Id;
                 }
@@ -366,7 +366,7 @@ namespace RevitMCPBridge
                     createdElements.Add((int)totalLabel.Id.Value);
                     createdElements.Add((int)totalValue.Id.Value);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -736,7 +736,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Verify if requested
@@ -858,7 +858,7 @@ namespace RevitMCPBridge
                             level,
                             Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     // Verify placement
@@ -891,7 +891,7 @@ namespace RevitMCPBridge
                                     trans.SetFailureHandlingOptions(failureOpts);
 
                                     doc.Delete(placedInstance.Id);
-                                    trans.Commit();
+                                    trans.CommitAndCheck();
                                 }
                             }
                         }

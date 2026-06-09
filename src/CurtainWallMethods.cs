@@ -213,7 +213,7 @@ namespace RevitMCPBridge
 
                     var wall = Wall.Create(doc, line, wallType.Id, level.Id, height, 0, false, false);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)
@@ -269,7 +269,7 @@ namespace RevitMCPBridge
                     var oldTypeName = wall.WallType.Name;
                     wall.WallType = newType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)
@@ -397,7 +397,7 @@ namespace RevitMCPBridge
                     var oneSegment = v.GetOptional<bool>("oneSegment", false);
                     var gridLine = curtainGrid.AddGridLine(isUGrid, point, oneSegment);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)
@@ -442,7 +442,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(gridLineId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("deletedGridLineId", (int)gridLineId.Value)
@@ -583,7 +583,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error("Element is not a panel or family instance", "INVALID_ELEMENT").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("panelId", (int)panelId.Value)
@@ -632,7 +632,7 @@ namespace RevitMCPBridge
                     var pinned = element.Pinned;
                     element.Pinned = !pinned;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("panelId", (int)panelId.Value)
@@ -757,7 +757,7 @@ namespace RevitMCPBridge
 
                     mullion.ChangeTypeId(newTypeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("mullionId", (int)mullionId.Value)
@@ -926,7 +926,7 @@ namespace RevitMCPBridge
 
                     var curtainSystem = doc.Create.NewCurtainSystem(faceArray, csType);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var systemId = curtainSystem != null ? (int)curtainSystem.Id.Value : -1;
 
@@ -1066,7 +1066,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wallId", (int)wall.Id.Value)

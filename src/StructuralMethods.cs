@@ -153,7 +153,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, column.Id, Line.CreateBound(point, point + axis), rotation * Math.PI / 180.0);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -355,7 +355,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var resultLocation = (column.Location as LocationPoint)?.Point;
                     var baseLevel = doc.GetElement(column.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_PARAM)?.AsElementId()) as Level;
@@ -489,7 +489,7 @@ namespace RevitMCPBridge2026
                     // Create beam
                     FamilyInstance beam = doc.Create.NewFamilyInstance(beamLine, beamType, level, StructuralType.Beam);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -641,7 +641,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var locationCurveResult = beam.Location as LocationCurve;
                     Line beamLine = locationCurveResult?.Curve as Line;
@@ -783,7 +783,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, foundation.Id, Line.CreateBound(point, point + axis), rotation * Math.PI / 180.0);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -991,7 +991,7 @@ namespace RevitMCPBridge2026
                     // Create framing element
                     FamilyInstance framing = doc.Create.NewFamilyInstance(framingLine, framingType, level, structuralUsage);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1470,7 +1470,7 @@ namespace RevitMCPBridge2026
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create rebar" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1644,7 +1644,7 @@ namespace RevitMCPBridge2026
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create point load" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1744,7 +1744,7 @@ namespace RevitMCPBridge2026
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create line load" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1851,7 +1851,7 @@ namespace RevitMCPBridge2026
                         return JsonConvert.SerializeObject(new { success = false, error = "Failed to create area load" });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2364,7 +2364,7 @@ namespace RevitMCPBridge2026
                     // Delete the element
                     ICollection<ElementId> deletedIds = doc.Delete(elementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2524,7 +2524,7 @@ namespace RevitMCPBridge2026
                         // For other views, we just won't create a placeholder
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

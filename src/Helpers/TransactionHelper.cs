@@ -34,7 +34,7 @@ namespace RevitMCPBridge.Helpers
                 {
                     trans.Start();
                     var result = action(trans);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("result", result)
@@ -108,7 +108,7 @@ namespace RevitMCPBridge.Helpers
                 {
                     trans.Start();
                     var result = action(uiApp, doc, trans);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("result", result)

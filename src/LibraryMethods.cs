@@ -295,7 +295,7 @@ namespace RevitMCPBridge
 
                     if (doc.LoadFamily(familyPath, out loadedFamily))
                     {
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     else
                     {
@@ -449,7 +449,7 @@ namespace RevitMCPBridge
                             Transform.Identity,
                             copyOptions);
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     if (copiedIds == null || copiedIds.Count == 0)

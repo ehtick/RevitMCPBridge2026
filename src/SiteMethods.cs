@@ -80,7 +80,7 @@ namespace RevitMCPBridge
                     var xyzPoints = points.Select(p => new XYZ(p[0], p[1], p.Length > 2 ? p[2] : 0)).ToList();
                     var topo = TopographySurface.Create(doc, xyzPoints);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -175,7 +175,7 @@ namespace RevitMCPBridge
                         editScope.Commit(new TopographyEditFailuresPreprocessor());
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -216,7 +216,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(topoId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedTopoId = topoId.Value });
                 }
@@ -327,7 +327,7 @@ namespace RevitMCPBridge
                     var curves = new List<CurveLoop> { curveLoop };
                     var pad = BuildingPad.Create(doc, padType.Id, level.Id, curves);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -426,7 +426,7 @@ namespace RevitMCPBridge
                         createdLines.Add(modelLine.Id.Value);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -501,7 +501,7 @@ namespace RevitMCPBridge
                     siteLocation.Latitude = latitude.Value * (Math.PI / 180.0);
                     siteLocation.Longitude = longitude.Value * (Math.PI / 180.0);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -572,7 +572,7 @@ namespace RevitMCPBridge
                         editScope.Commit(new TopographyEditFailuresPreprocessor());
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -628,7 +628,7 @@ namespace RevitMCPBridge
                         editScope.Commit(new TopographyEditFailuresPreprocessor());
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -755,7 +755,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var subTopoId = subRegion.TopographySurface.Id;
                     return JsonConvert.SerializeObject(new
@@ -857,7 +857,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(subRegionId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedSubRegionId = subRegionId.Value });
                 }
@@ -970,7 +970,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.RotateElement(doc, instance.Id, axis, rotation * (Math.PI / 180.0));
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1018,7 +1018,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(elementId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedElementId = elementId.Value });
                 }
@@ -1079,7 +1079,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1121,7 +1121,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(padId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedPadId = padId.Value });
                 }
@@ -1273,7 +1273,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.RotateElement(doc, instance.Id, axis, rotation * (Math.PI / 180.0));
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1369,7 +1369,7 @@ namespace RevitMCPBridge
 
                     projectInfo.Address = string.Join(", ", parts);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1533,7 +1533,7 @@ namespace RevitMCPBridge
                         createdWalls.Add(wall.Id.Value);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1657,7 +1657,7 @@ namespace RevitMCPBridge
 
                     var newTopo = TopographySurface.Create(doc, mirroredPoints);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

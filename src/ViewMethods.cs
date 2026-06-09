@@ -93,7 +93,7 @@ namespace RevitMCPBridge
                         view.Name = viewName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)view.Id.Value, view.Name, "FloorPlan")
@@ -152,7 +152,7 @@ namespace RevitMCPBridge
                         view.Name = viewName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)view.Id.Value, view.Name, "CeilingPlan")
@@ -225,7 +225,7 @@ namespace RevitMCPBridge
                         section.Name = viewName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)section.Id.Value, section.Name, "Section")
@@ -286,7 +286,7 @@ namespace RevitMCPBridge
                         elevationView.Name = viewName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)elevationView.Id.Value, elevationView.Name, "Elevation")
@@ -336,7 +336,7 @@ namespace RevitMCPBridge
                     draftingView.Name = viewName;
                     draftingView.Scale = scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)draftingView.Id.Value, draftingView.Name, "Drafting")
@@ -393,7 +393,7 @@ namespace RevitMCPBridge
                         newView.Name = newName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalViewId", (int)viewId.Value)
@@ -439,7 +439,7 @@ namespace RevitMCPBridge
 
                     view.ViewTemplateId = templateId;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -781,7 +781,7 @@ namespace RevitMCPBridge
                         cropMethod = $"{viewTypeInfo}: hasScopeBox={hasScopeBox}, result={checkWidth:F0}x{checkHeight:F0}";
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Return actual crop box values after commit
                     var finalCropBox = view.CropBox;
@@ -882,7 +882,7 @@ namespace RevitMCPBridge
 
                     view.Name = newName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -917,7 +917,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(viewId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -959,7 +959,7 @@ namespace RevitMCPBridge
 
                     view.Scale = scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -1653,7 +1653,7 @@ namespace RevitMCPBridge
                     // Set the scale
                     legendView.Scale = scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .WithView((int)legendView.Id.Value, legendView.Name, legendView.ViewType.ToString())
@@ -1982,7 +1982,7 @@ namespace RevitMCPBridge
                         methodUsed = "CropBox Z values";
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Verify result
                     var finalCropBox = view.CropBox;
@@ -2098,7 +2098,7 @@ namespace RevitMCPBridge
 
                     view.SetCategoryHidden(categoryId, hidden);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -2201,7 +2201,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -2260,7 +2260,7 @@ namespace RevitMCPBridge
 
                     view.HideElements(elementIdsList);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -2319,7 +2319,7 @@ namespace RevitMCPBridge
 
                     view.UnhideElements(elementIdsList);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewId", (int)viewId.Value)
@@ -2417,7 +2417,7 @@ namespace RevitMCPBridge
                     // Force document regeneration
                     doc.Regenerate();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // If specific view requested, refresh it
@@ -2682,7 +2682,7 @@ namespace RevitMCPBridge
                         template.Name = templateName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("templateId", template?.Id.Value ?? 0)
@@ -2739,7 +2739,7 @@ namespace RevitMCPBridge
                         newTemplate.Name = newName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("newTemplateId", newTemplateId.Value)
@@ -2871,7 +2871,7 @@ namespace RevitMCPBridge
                     scopeBox.SetShape(new GeometryObject[] { solid });
                     scopeBox.Name = name;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("scopeBoxId", scopeBox.Id.Value)
@@ -2956,7 +2956,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -3029,7 +3029,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -3139,7 +3139,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("legendId", newLegendId.Value)
@@ -3266,7 +3266,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get assembly info
                     var assemblyType2 = doc.GetElement(assembly.GetTypeId()) as AssemblyType;
@@ -3700,7 +3700,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
                 finally
@@ -3824,7 +3824,7 @@ namespace RevitMCPBridge
 
                     view.SetColorFillSchemeId(categoryId, new ElementId(schemeId));
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -3925,7 +3925,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var scheme = doc.GetElement(schemeId);

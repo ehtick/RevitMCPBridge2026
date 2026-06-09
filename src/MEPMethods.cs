@@ -147,7 +147,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -415,7 +415,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -728,7 +728,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -997,7 +997,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1284,7 +1284,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1410,7 +1410,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1682,7 +1682,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1831,7 +1831,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1986,7 +1986,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2109,7 +2109,7 @@ namespace RevitMCPBridge2026
 
                     circuit.AddToCircuit(elemSet);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2170,7 +2170,7 @@ namespace RevitMCPBridge2026
 
                     circuit.RemoveFromCircuit(elemSet);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2231,7 +2231,7 @@ namespace RevitMCPBridge2026
                     {
                         trans.Start();
                         doc.Delete(new ElementId(sourceId));
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2270,7 +2270,7 @@ namespace RevitMCPBridge2026
                     // Step 4: Delete the now-empty source circuit
                     doc.Delete(new ElementId(sourceId));
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2413,7 +2413,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2611,7 +2611,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3043,7 +3043,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3199,7 +3199,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3256,7 +3256,7 @@ namespace RevitMCPBridge2026
 
                     SpaceTag tag = doc.Create.NewSpaceTag(space, new UV(location.X, location.Y), view);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3471,7 +3471,7 @@ namespace RevitMCPBridge2026
                     // Connect the two connectors
                     connector1.ConnectTo(connector2);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3573,7 +3573,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3690,7 +3690,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3924,7 +3924,7 @@ namespace RevitMCPBridge2026
 
                     var deletedIds = doc.Delete(elementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {

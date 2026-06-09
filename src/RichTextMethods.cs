@@ -167,7 +167,7 @@ namespace RevitMCPBridge
                         colorParam.Set(colorInt);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -370,7 +370,7 @@ namespace RevitMCPBridge
                     var storageElement = group != null ? (Element)group : doc.GetElement(textNoteIds[0]);
                     StoreRichTextData(storageElement, richTextData);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -550,7 +550,7 @@ namespace RevitMCPBridge
                         doc.Delete(elementId);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Create new rich text note with updated spans
@@ -618,7 +618,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {

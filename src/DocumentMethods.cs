@@ -462,7 +462,7 @@ namespace RevitMCPBridge
                             catch { /* Ignore if parameter doesn't exist */ }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -921,7 +921,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -998,7 +998,7 @@ namespace RevitMCPBridge
                             break; // Only reload first if not specified
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1066,7 +1066,7 @@ namespace RevitMCPBridge
                     if (parameters["author"] != null)
                         projectInfo.Author = parameters["author"].ToString();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -1127,7 +1127,7 @@ namespace RevitMCPBridge
 
                     doc.EnableWorksharing(defaultWorksetName, "Workset1");
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1183,7 +1183,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     doc.Export(outputDir, fileName, ifcOptions);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1645,7 +1645,7 @@ namespace RevitMCPBridge
                             break;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get the sequence number
                     var allRevisions = Revision.GetAllRevisionIds(doc);
@@ -1785,7 +1785,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1868,7 +1868,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -1957,7 +1957,7 @@ namespace RevitMCPBridge
 
                     var cloud = RevisionCloud.Create(doc, view, revision.Id, curves);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2105,7 +2105,7 @@ namespace RevitMCPBridge
                         tagLocation
                     );
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var revision = doc.GetElement(cloud.RevisionId) as Revision;
 
@@ -2616,7 +2616,7 @@ namespace RevitMCPBridge
                             view.HideElements(new List<ElementId> { instance.Id });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3136,7 +3136,7 @@ namespace RevitMCPBridge
                                     Transform.Identity,
                                     copyOptions);
 
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
 
                             if (copiedIds == null || copiedIds.Count == 0)
@@ -3322,7 +3322,7 @@ namespace RevitMCPBridge
                                 .OfClass(typeof(ViewFamilyType))
                                 .Cast<ViewFamilyType>()
                                 .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.Drafting);
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
 
                         if (draftingViewType == null)
@@ -3351,7 +3351,7 @@ namespace RevitMCPBridge
                                     newView = ViewDrafting.Create(newDoc, draftingViewType.Id);
                                     newView.Name = sourceView.Name;
                                     newView.Scale = sourceView.Scale;
-                                    trans.Commit();
+                                    trans.CommitAndCheck();
                                 }
 
                                 // Copy elements
@@ -3370,7 +3370,7 @@ namespace RevitMCPBridge
                                                 new CopyPasteOptions());
                                         }
                                         catch { }
-                                        trans.Commit();
+                                        trans.CommitAndCheck();
                                     }
                                 }
 
@@ -3412,7 +3412,7 @@ namespace RevitMCPBridge
                                 }
                             }
                             catch { }
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
 
                         // Delete existing file if it exists
@@ -3557,7 +3557,7 @@ namespace RevitMCPBridge
                     catch { }
                 }
 
-                trans.Commit();
+                trans.CommitAndCheck();
             }
         }
 
@@ -3673,7 +3673,7 @@ namespace RevitMCPBridge
                                 Transform.Identity,
                                 copyOptions);
 
-                            trans.Commit();
+                            trans.CommitAndCheck();
                         }
 
                         if (copiedIds != null && copiedIds.Count > 0)
@@ -3777,7 +3777,7 @@ namespace RevitMCPBridge
                     catch { } // Some views can't be deleted, that's OK
                 }
 
-                trans.Commit();
+                trans.CommitAndCheck();
             }
         }
 
@@ -3895,7 +3895,7 @@ namespace RevitMCPBridge
                                     Transform.Identity,
                                     copyOptions);
 
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
 
                             if (copiedIds != null && copiedIds.Count > 0)
@@ -4035,7 +4035,7 @@ namespace RevitMCPBridge
                     }
                     catch { }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
             }
             catch { }

@@ -113,7 +113,7 @@ namespace RevitMCPBridge2026
                         location
                     );
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -372,7 +372,7 @@ namespace RevitMCPBridge2026
                     // Create the annotation symbol instance
                     FamilyInstance symbol = doc.Create.NewFamilyInstance(location, symbolType, view);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -522,7 +522,7 @@ namespace RevitMCPBridge2026
                     // Create revision cloud
                     RevisionCloud cloud = RevisionCloud.Create(doc, view, revisionId, curveList);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -691,7 +691,7 @@ namespace RevitMCPBridge2026
                     // Create new cloud with updated boundary
                     RevisionCloud newCloud = RevisionCloud.Create(doc, view, revisionId, curveList);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -756,7 +756,7 @@ namespace RevitMCPBridge2026
 
                     doc.Delete(cloudId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -835,7 +835,7 @@ namespace RevitMCPBridge2026
                         revision.IssuedBy = issuedBy;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -976,7 +976,7 @@ namespace RevitMCPBridge2026
                         revision.IssuedBy = parameters["issuedBy"].ToString();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1057,7 +1057,7 @@ namespace RevitMCPBridge2026
 
                     revision.Issued = issued;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1166,7 +1166,7 @@ namespace RevitMCPBridge2026
                     // Create angular dimension
                     Dimension dimension = doc.Create.NewDimension(view, dimensionLine, references);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1277,7 +1277,7 @@ namespace RevitMCPBridge2026
                     // Create radial dimension
                     Dimension dimension = doc.Create.NewDimension(view, line, references);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1389,7 +1389,7 @@ namespace RevitMCPBridge2026
                     // Create diameter dimension
                     Dimension dimension = doc.Create.NewDimension(view, line, references);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1497,7 +1497,7 @@ namespace RevitMCPBridge2026
                     // Create arc length dimension
                     Dimension dimension = doc.Create.NewDimension(view, arcLine, references);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1630,7 +1630,7 @@ namespace RevitMCPBridge2026
                     View calloutView = ViewSection.CreateCallout(doc, parentViewId, calloutTypeId, min, max);
                     ViewSection callout = calloutView as ViewSection;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1824,7 +1824,7 @@ namespace RevitMCPBridge2026
                     // Create area tag
                     AreaTag areaTag = doc.Create.NewAreaTag(viewPlan, area, location);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2015,7 +2015,7 @@ namespace RevitMCPBridge2026
                     // Create spot elevation
                     SpotDimension spotElevation = doc.Create.NewSpotElevation(view, reference, location, XYZ.Zero, XYZ.Zero, location, true);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2119,7 +2119,7 @@ namespace RevitMCPBridge2026
                     // Create spot coordinate
                     SpotDimension spotCoordinate = doc.Create.NewSpotCoordinate(view, reference, location, XYZ.Zero, XYZ.Zero, location, true);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2279,7 +2279,7 @@ namespace RevitMCPBridge2026
                         refPlane.Name = parameters["name"].ToString();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2533,7 +2533,7 @@ namespace RevitMCPBridge2026
                     var instance = doc.Create.NewFamilyInstance(
                         position, symbol, legendView);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2767,7 +2767,7 @@ namespace RevitMCPBridge2026
                     // Delete the annotation
                     doc.Delete(annotationId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2934,7 +2934,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3070,7 +3070,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3357,7 +3357,7 @@ namespace RevitMCPBridge2026
                     Line leaderLine = Line.CreateBound(annotationLocation, targetPoint);
                     DetailCurve leaderCurve = doc.Create.NewDetailCurve(view, leaderLine);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3530,7 +3530,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -3631,7 +3631,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -3712,7 +3712,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {

@@ -77,7 +77,7 @@ namespace RevitMCPBridge
                         room.Number = number;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -249,7 +249,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -314,7 +314,7 @@ namespace RevitMCPBridge
 
                     var tag = doc.Create.NewRoomTag(new LinkElementId(roomElementId), tagLocation, viewElementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("tagId", (int)tag.Id.Value)
@@ -434,7 +434,7 @@ namespace RevitMCPBridge
 
                     room.Number = newNumber;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -481,7 +481,7 @@ namespace RevitMCPBridge
 
                     room.Name = newName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -534,7 +534,7 @@ namespace RevitMCPBridge
 
                     deptParam.Set(newDepartment);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -588,7 +588,7 @@ namespace RevitMCPBridge
 
                     commentsParam.Set(newComments);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -762,7 +762,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -938,7 +938,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("separationLineId", (int)modelCurve.Id.Value)
@@ -973,7 +973,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(roomId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)roomId.Value)
@@ -1073,7 +1073,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("renumberedCount", renumbered.Count)
@@ -1208,7 +1208,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error("Comments parameter is read-only or not available", "PARAMETER_NOT_FOUND").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("roomId", (int)room.Id.Value)
@@ -1410,7 +1410,7 @@ namespace RevitMCPBridge
                     // Force regeneration to recalculate all room areas
                     doc.Regenerate();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("previousSetting", previousSetting.ToString())
@@ -1528,7 +1528,7 @@ namespace RevitMCPBridge
                         areaPlan.Name = viewName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1613,7 +1613,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1747,7 +1747,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 if (newArea == null)
@@ -1867,7 +1867,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -2051,7 +2051,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -2146,7 +2146,7 @@ namespace RevitMCPBridge
                     trans.Start();
 
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -2176,7 +2176,7 @@ namespace RevitMCPBridge
                     trans.Start();
 
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()

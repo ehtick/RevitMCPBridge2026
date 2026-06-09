@@ -76,7 +76,7 @@ namespace RevitMCPBridge
                         location
                     );
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     Log.Information($"Tagged door {doorId.Value} in view {viewId.Value}");
 
@@ -148,7 +148,7 @@ namespace RevitMCPBridge
                         view.Id
                     );
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     Log.Information($"Tagged room {roomId.Value} in view {viewId.Value}");
 
@@ -230,7 +230,7 @@ namespace RevitMCPBridge
                         midpoint
                     );
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     Log.Information($"Tagged wall {wallId.Value} in view {viewId.Value}");
 
@@ -354,7 +354,7 @@ namespace RevitMCPBridge
                         );
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     Log.Information($"Tagged element {elementId.Value} in view {viewId.Value}");
 
@@ -442,7 +442,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Tagged {taggedCount} doors in view {viewId.Value}");
@@ -525,7 +525,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Tagged {taggedCount} rooms in view {viewId.Value}");
@@ -650,7 +650,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(tagId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Deleted tag {tagId.Value}");
@@ -864,7 +864,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(toDelete);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Deleted {toDelete.Count} text notes from view {viewId.Value}");
@@ -1038,7 +1038,7 @@ namespace RevitMCPBridge
                         diagnostics.Add("After loading, edit family in Family Editor: change label to show 'Circuit Number'");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Save family to temp file with desired name, then load into project
@@ -1059,7 +1059,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.LoadFamily(tempFamilyPath, new TagFamilyLoadOptions(), out loadedFamily);
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 if (loadedFamily == null)
@@ -1081,7 +1081,7 @@ namespace RevitMCPBridge
                             types.Add(new { typeId = (int)typeId.Value, typeName = symbol.Name });
                         }
                     }
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 Log.Information($"Created tag family: {familyName} with {types.Count} type(s)");

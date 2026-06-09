@@ -70,7 +70,7 @@ namespace RevitMCPBridge2026
                         material.Shininess = shininess;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", (int)materialId.Value)
@@ -250,7 +250,7 @@ namespace RevitMCPBridge2026
                         material.MaterialClass = parameters["materialClass"].ToString();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", (int)material.Id.Value)
@@ -299,7 +299,7 @@ namespace RevitMCPBridge2026
 
                     Material newMaterial = material.Duplicate(newName);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalMaterialId", (int)material.Id.Value)
@@ -350,7 +350,7 @@ namespace RevitMCPBridge2026
                     // Attempt to delete
                     ICollection<ElementId> deletedIds = doc.Delete(materialId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", materialIdInt)
@@ -409,7 +409,7 @@ namespace RevitMCPBridge2026
                         material.UseRenderAppearanceForShading = useRenderAppearance;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", materialIdInt)
@@ -546,7 +546,7 @@ namespace RevitMCPBridge2026
 
                     material.AppearanceAssetId = appearanceAssetId;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", materialIdInt)
@@ -799,7 +799,7 @@ namespace RevitMCPBridge2026
 
                     material.MaterialClass = materialClass;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("materialId", materialIdInt)
@@ -943,7 +943,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1246,7 +1246,7 @@ namespace RevitMCPBridge2026
 
                     AppearanceAssetElement newAsset = asset.Duplicate(newName);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalAssetId", assetIdInt)
@@ -1427,7 +1427,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Note: AppearanceAssetEditScope is internal/protected in Revit 2026 API
                     // Color modification of appearance assets must be done manually in Revit UI
@@ -1646,7 +1646,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1748,7 +1748,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1862,7 +1862,7 @@ namespace RevitMCPBridge2026
                         successCount++;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -1937,7 +1937,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()

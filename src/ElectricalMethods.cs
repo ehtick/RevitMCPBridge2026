@@ -453,7 +453,7 @@ namespace RevitMCPBridge
                         return ResponseBuilder.Error("Cannot set breaker rating - parameter is read-only or not available", "READONLY_PARAMETER").Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("circuitId", circuitIdInt)
@@ -593,7 +593,7 @@ namespace RevitMCPBridge
                     var wire = Wire.Create(doc, wireTypeId, viewId,
                         WiringType.Arc, vertices, null, null);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (wire == null)
                         return ResponseBuilder.Error("Failed to create wire", "CREATION_FAILED").Build();
@@ -703,7 +703,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(wireIdInt));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("wireId", wireIdInt)
@@ -988,7 +988,7 @@ namespace RevitMCPBridge
                     // Create the electrical system with switch and fixtures
                     var system = ElectricalSystem.Create(doc, allIds, ElectricalSystemType.PowerCircuit);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (system == null)
                         return ResponseBuilder.Error("Failed to create switch system", "CREATION_FAILED").Build();
@@ -1482,7 +1482,7 @@ namespace RevitMCPBridge
                             TagOrientation.Horizontal, tagPoint);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (tag == null)
                         return ResponseBuilder.Error("Failed to create tag", "CREATION_FAILED").Build();

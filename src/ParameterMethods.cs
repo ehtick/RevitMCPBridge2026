@@ -305,7 +305,7 @@ namespace RevitMCPBridge2026
                             });
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -317,7 +317,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -390,7 +390,7 @@ namespace RevitMCPBridge2026
 
                     if (removed)
                     {
-                        trans.Commit();
+                        trans.CommitAndCheck();
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -566,7 +566,7 @@ namespace RevitMCPBridge2026
                         bound = bindingMap.ReInsert(externalDef, binding, groupTypeId);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (bound)
                     {
@@ -933,7 +933,7 @@ namespace RevitMCPBridge2026
                         bound = bindingMap.Insert(foundDef, binding, foundDef.GetGroupTypeId());
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (bound)
                     {
@@ -1142,7 +1142,7 @@ namespace RevitMCPBridge2026
                             break;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (success)
                     {
@@ -1407,7 +1407,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -2223,7 +2223,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get the created parameter info
                     var definition = globalParam.GetDefinition();
@@ -2415,7 +2415,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get updated info
                     var definition = globalParam.GetDefinition();
@@ -2501,7 +2501,7 @@ namespace RevitMCPBridge2026
                     failureOptions.SetFailuresPreprocessor(new WarningSwallower());
                     trans.SetFailureHandlingOptions(failureOptions);
                     doc.Delete(gpId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2598,7 +2598,7 @@ namespace RevitMCPBridge2026
                     // Set the formula
                     familyManager.SetFormula(familyParam, formula);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2823,7 +2823,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3099,7 +3099,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new
@@ -3430,7 +3430,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
                 else if (dryRun)

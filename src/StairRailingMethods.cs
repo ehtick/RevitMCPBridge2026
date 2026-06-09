@@ -166,7 +166,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(stairId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedStairId = stairId.Value });
                 }
@@ -310,7 +310,7 @@ namespace RevitMCPBridge
 
                     var railing = Railing.Create(doc, curveLoop, railType.Id, level.Id);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -351,7 +351,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(railingId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedRailingId = railingId.Value });
                 }
@@ -454,7 +454,7 @@ namespace RevitMCPBridge
                     trans.SetFailureHandlingOptions(failureOptions);
 
                     doc.Delete(new ElementId(rampId.Value));
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new { success = true, deletedRampId = rampId.Value });
                 }
@@ -616,7 +616,7 @@ namespace RevitMCPBridge
                         // The floor is created flat; user can add slope arrows manually or via addSlopeArrow method
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 if (newRampId == ElementId.InvalidElementId)
@@ -747,7 +747,7 @@ namespace RevitMCPBridge
                             runIds.Add(run.Id.Value);
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     stairsScope.Commit(new StairsFailurePreprocessor());
@@ -893,7 +893,7 @@ namespace RevitMCPBridge
                             runIds.Add(run2.Id.Value);
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     stairsScope.Commit(new StairsFailurePreprocessor());
@@ -982,7 +982,7 @@ namespace RevitMCPBridge
                         modifications.Add($"Set width to {newWidth.Value}'");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return JsonConvert.SerializeObject(new

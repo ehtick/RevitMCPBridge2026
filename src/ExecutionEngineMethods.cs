@@ -311,7 +311,7 @@ namespace RevitMCPBridge
 
                     var instance = ScheduleSheetInstance.Create(doc, targetSheet.Id, schedule.Id, position);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -405,7 +405,7 @@ namespace RevitMCPBridge
 
                     var viewport = Viewport.Create(doc, targetSheet.Id, view.Id, position);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -491,7 +491,7 @@ namespace RevitMCPBridge
                             {
                                 trans.Start();
                                 ScheduleSheetInstance.Create(doc, targetSheet.Id, schedule.Id, position);
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
                         }
                         fixCount++;
@@ -539,7 +539,7 @@ namespace RevitMCPBridge
                             {
                                 trans.Start();
                                 Viewport.Create(doc, targetSheet.Id, view.Id, position);
-                                trans.Commit();
+                                trans.CommitAndCheck();
                             }
                         }
                         fixCount++;
@@ -596,7 +596,7 @@ namespace RevitMCPBridge
             {
                 trans.Start();
                 var instance = ScheduleSheetInstance.Create(doc, targetSheet.Id, schedule.Id, position);
-                trans.Commit();
+                trans.CommitAndCheck();
 
                 return new
                 {
@@ -640,7 +640,7 @@ namespace RevitMCPBridge
             {
                 trans.Start();
                 var viewport = Viewport.Create(doc, targetSheet.Id, view.Id, position);
-                trans.Commit();
+                trans.CommitAndCheck();
 
                 return new
                 {
@@ -803,7 +803,7 @@ namespace RevitMCPBridge
                 var floorPlan = ViewPlan.Create(doc, viewFamilyType.Id, level.Id);
                 floorPlan.Name = $"{level.Name} - Floor Plan";
 
-                trans.Commit();
+                trans.CommitAndCheck();
 
                 return new
                 {
@@ -842,7 +842,7 @@ namespace RevitMCPBridge
                 var ceilingPlan = ViewPlan.Create(doc, viewFamilyType.Id, level.Id);
                 ceilingPlan.Name = $"{level.Name} - RCP";
 
-                trans.Commit();
+                trans.CommitAndCheck();
 
                 return new
                 {
@@ -972,7 +972,7 @@ namespace RevitMCPBridge
             {
                 trans.Start();
                 doc.Delete(sheet.Id);
-                trans.Commit();
+                trans.CommitAndCheck();
 
                 return new
                 {

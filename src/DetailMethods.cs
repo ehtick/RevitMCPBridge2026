@@ -83,7 +83,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -156,7 +156,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -226,7 +226,7 @@ namespace RevitMCPBridge2026
                         lineIds.Add((int)dc.Id.Value);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -459,7 +459,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -666,7 +666,7 @@ namespace RevitMCPBridge2026
 
                     FilledRegion filledRegion = FilledRegion.Create(doc, filledRegionTypeId, view.Id, curveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -885,7 +885,7 @@ namespace RevitMCPBridge2026
                     // Create new filled region with new boundaries
                     FilledRegion newFilledRegion = FilledRegion.Create(doc, filledRegionTypeId, viewId, newCurveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1161,7 +1161,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, detailComponent.Id, rotationLine, rotationRadians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1293,7 +1293,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, detailComponent.Id, rotationLine, rotationRadians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1700,7 +1700,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, breakLine.Id, rotationLine, rotationRadians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1844,7 +1844,7 @@ namespace RevitMCPBridge2026
                     // Properties like LineWeight, LineColor, LinePattern are typically set via UI
                     // or require more complex API access
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1942,7 +1942,7 @@ namespace RevitMCPBridge2026
                         group.GroupType.Name = groupName;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2027,7 +2027,7 @@ namespace RevitMCPBridge2026
                     // Place the group at the specified location
                     Group group = doc.Create.PlaceGroup(location, groupType);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2221,7 +2221,7 @@ namespace RevitMCPBridge2026
 
                     FilledRegion maskingRegion = FilledRegion.Create(doc, maskingType.Id, viewId, curveLoops);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2369,7 +2369,7 @@ namespace RevitMCPBridge2026
 
                     view.SetElementOverrides(elementId, overrides);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2532,7 +2532,7 @@ namespace RevitMCPBridge2026
                     OverrideGraphicSettings overrides = new OverrideGraphicSettings();
                     view.SetElementOverrides(elementId, overrides);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2602,7 +2602,7 @@ namespace RevitMCPBridge2026
 
                     ICollection<ElementId> deletedIds = doc.Delete(elementId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2714,7 +2714,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.MoveElements(doc, copiedIds, offset);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3083,7 +3083,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
                 else
@@ -3282,7 +3282,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, breakLine.Id, rotationLine, rotationRadians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3389,7 +3389,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3525,7 +3525,7 @@ namespace RevitMCPBridge2026
 
                     var dimension = doc.Create.NewDimension(view, dimLine, refArray);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     if (dimension == null)
                     {
@@ -3771,7 +3771,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3982,7 +3982,7 @@ namespace RevitMCPBridge2026
                     newDraftingView.Name = newViewName;
                     newDraftingView.Scale = sourceView.Scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Copy elements in separate transaction (required for view-to-view copy)
@@ -4024,7 +4024,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -4284,7 +4284,7 @@ namespace RevitMCPBridge2026
                     newDraftingView.Name = newViewName;
                     newDraftingView.Scale = sourceView.Scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Trace model geometry
@@ -4373,7 +4373,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -4428,7 +4428,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -4482,7 +4482,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -4862,7 +4862,7 @@ namespace RevitMCPBridge2026
                     newDraftingView.Name = "Smart Trace - " + sourceView.Name;
                     newDraftingView.Scale = sourceView.Scale;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // STEP 1: Trace visible geometry as lines (this works well)
@@ -4932,7 +4932,7 @@ namespace RevitMCPBridge2026
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // STEP 2: Analyze compound structures and add detail components/filled regions
@@ -5111,7 +5111,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // STEP 3: Copy existing detail elements and annotations from source
@@ -5193,7 +5193,7 @@ namespace RevitMCPBridge2026
                         errors.Add($"Error copying annotations: {ex.Message}");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -5651,7 +5651,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Get types from loaded family
@@ -5822,7 +5822,7 @@ namespace RevitMCPBridge2026
                     {
                         trans.Start();
                         symbol.Activate();
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
                 }
 
@@ -5920,7 +5920,7 @@ namespace RevitMCPBridge2026
                         ElementTransformUtils.RotateElement(doc, instance.Id, axis, radians);
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 if (instance == null)
@@ -6504,7 +6504,7 @@ namespace RevitMCPBridge2026
 
                     actualCopiedCount = copiedIds.Count - 1; // Subtract 1 for the view itself
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Close source document AFTER transaction commits
@@ -6848,7 +6848,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -7071,7 +7071,7 @@ namespace RevitMCPBridge2026
                             currentX += thickness * dirMultiplier;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 double totalThickness = Math.Abs(currentX - originX);
@@ -7357,7 +7357,7 @@ namespace RevitMCPBridge2026
                         lineStyleCache, filledRegionTypeCache, strokeWidthMap, defaultFillType,
                         defaultTextTypeId, scaleFactor, flipY, results, ref successCount, ref errorCount);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -8143,7 +8143,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -8548,7 +8548,7 @@ namespace RevitMCPBridge2026
                             };
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     // Roll back - removes the temp component
@@ -8763,7 +8763,7 @@ namespace RevitMCPBridge2026
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     transGroup.RollBack();
@@ -8925,7 +8925,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Return precise position info so caller knows exactly where it landed
                     var dimBBox = dimension.get_BoundingBox(view);
@@ -9200,7 +9200,7 @@ namespace RevitMCPBridge2026
                         });
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {

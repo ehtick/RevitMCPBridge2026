@@ -486,7 +486,7 @@ namespace RevitMCPBridge
                         return false;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 detailDoc.Close(false);
@@ -5002,7 +5002,7 @@ namespace RevitMCPBridge
                             }
                         }
 
-                        trans.Commit();
+                        trans.CommitAndCheck();
                     }
 
                     imported++;
@@ -5879,7 +5879,7 @@ namespace RevitMCPBridge
                     Autodesk.Revit.DB.Transform.Identity,
                     copyOptions);
 
-                trans.Commit();
+                trans.CommitAndCheck();
             }
 
             // Save as

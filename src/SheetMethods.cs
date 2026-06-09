@@ -330,7 +330,7 @@ namespace RevitMCPBridge
                     sheet.SheetNumber = sheetNumber;
                     sheet.Name = sheetName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // AUTO-SWITCH: Switch to the newly created sheet so user sees it
                     bool didSwitch = false;
@@ -810,7 +810,7 @@ namespace RevitMCPBridge
                             .Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewportId", (int)viewport.Id.Value)
@@ -1003,7 +1003,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("sheetId", sheetIdInt)
@@ -1119,7 +1119,7 @@ namespace RevitMCPBridge
                         catch { }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Verify the final position
                     var actualCenter = viewport.GetBoxCenter();
@@ -1166,7 +1166,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(sheetId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("sheetId", (int)sheetId.Value)
@@ -1201,7 +1201,7 @@ namespace RevitMCPBridge
 
                     doc.Delete(viewportId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewportId", (int)viewportId.Value)
@@ -1322,7 +1322,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("originalSheetId", (int)sheetId.Value)
@@ -1366,7 +1366,7 @@ namespace RevitMCPBridge
 
                     viewport.ChangeTypeId(typeId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewportId", (int)viewportId.Value)
@@ -1470,7 +1470,7 @@ namespace RevitMCPBridge
 
                     viewport.LabelOffset = new XYZ(offsetX, offsetY, offsetZ);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     var newOffset = viewport.LabelOffset;
 
@@ -1531,7 +1531,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("renumberedCount", renumbered.Count)
@@ -2544,7 +2544,7 @@ namespace RevitMCPBridge
                         positionCorrected = true;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get actual placement results after correction
                     var actualOutline = viewport.GetBoxOutline();
@@ -3216,7 +3216,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -3348,7 +3348,7 @@ namespace RevitMCPBridge
                     // Place the image instance on the view
                     var imageInstance = ImageInstance.Create(doc, view, imageType.Id, placementOptions);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get image dimensions
                     var bbox = imageInstance.get_BoundingBox(view);
@@ -3439,7 +3439,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("imageId", (int)imageInstance.Id.Value)
@@ -3474,7 +3474,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     doc.Delete(imageId);
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("deletedImageId", (int)imageId.Value)
@@ -3538,7 +3538,7 @@ namespace RevitMCPBridge
                         Transform.Identity,
                         new CopyPasteOptions());
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("sourceViewId", (int)sourceViewId.Value)
@@ -3590,7 +3590,7 @@ namespace RevitMCPBridge
                 {
                     trans.Start();
                     textNote.Text = newText;
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("textNoteId", (int)textNoteId.Value)
@@ -4171,7 +4171,7 @@ namespace RevitMCPBridge
                     sheet.SheetNumber = sheetNumber;
                     sheet.Name = sheetName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get sheet dimensions
                     var titleblockInstance = new FilteredElementCollector(doc, sheet.Id)
@@ -4438,7 +4438,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 var result = ResponseBuilder.Success()
@@ -4634,7 +4634,7 @@ namespace RevitMCPBridge
                     // Change the titleblock type
                     titleblockInstance.Symbol = newTitleBlockType;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     // Get new sheet dimensions
                     var bbox = titleblockInstance.get_BoundingBox(sheet);
@@ -4764,7 +4764,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -5107,7 +5107,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -5303,7 +5303,7 @@ namespace RevitMCPBridge
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -5423,7 +5423,7 @@ namespace RevitMCPBridge
                         if (tbErrors.Count > 0) errorCount++;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 return ResponseBuilder.Success()
@@ -5647,7 +5647,7 @@ namespace RevitMCPBridge
                             .Build();
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
                         .With("viewportId", viewport.Id.Value)

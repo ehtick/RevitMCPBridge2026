@@ -75,7 +75,7 @@ namespace RevitMCPBridge2026
                     var schedule = ViewSchedule.CreateSchedule(doc, category.Id);
                     schedule.Name = scheduleName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -152,7 +152,7 @@ namespace RevitMCPBridge2026
                     var schedule = ViewSchedule.CreateKeySchedule(doc, category.Id);
                     schedule.Name = scheduleName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -230,7 +230,7 @@ namespace RevitMCPBridge2026
                     var schedule = ViewSchedule.CreateMaterialTakeoff(doc, category.Id);
                     schedule.Name = scheduleName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -290,7 +290,7 @@ namespace RevitMCPBridge2026
                     var schedule = ViewSchedule.CreateSchedule(doc, sheetCategoryId);
                     schedule.Name = scheduleName;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -446,7 +446,7 @@ namespace RevitMCPBridge2026
                         scheduleField.ColumnHeading = customHeading;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -530,7 +530,7 @@ namespace RevitMCPBridge2026
                     // Remove the field
                     definition.RemoveField(fieldId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -859,7 +859,7 @@ namespace RevitMCPBridge2026
                         field.IsHidden = isHidden;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1126,7 +1126,7 @@ namespace RevitMCPBridge2026
 
                     schedule.Definition.AddFilter(filter);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1211,7 +1211,7 @@ namespace RevitMCPBridge2026
                     // Remove the filter
                     definition.RemoveFilter(filterIndex);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1468,7 +1468,7 @@ namespace RevitMCPBridge2026
                         }
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1613,7 +1613,7 @@ namespace RevitMCPBridge2026
                     var newFilter = new ScheduleFilter(fieldId, newFilterType, newValue);
                     definition.AddFilter(newFilter);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1705,7 +1705,7 @@ namespace RevitMCPBridge2026
                     sortGroupField.SortOrder = isAscending ? ScheduleSortOrder.Ascending : ScheduleSortOrder.Descending;
                     definition.AddSortGroupField(sortGroupField);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1794,7 +1794,7 @@ namespace RevitMCPBridge2026
 
                     definition.AddSortGroupField(sortGroupField);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -1983,7 +1983,7 @@ namespace RevitMCPBridge2026
                     // Remove the sort/group field
                     definition.RemoveSortGroupField(sortGroupIndex);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2080,7 +2080,7 @@ namespace RevitMCPBridge2026
                         modifiedProperties.Add($"ShowTitle = {showTitle}");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2245,7 +2245,7 @@ namespace RevitMCPBridge2026
                     var field = definition.GetField(fieldIndex);
                     field.SheetColumnWidth = width;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2347,7 +2347,7 @@ namespace RevitMCPBridge2026
                     var field = definition.GetField(fieldIndex);
                     field.HorizontalAlignment = alignment;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -2925,7 +2925,7 @@ namespace RevitMCPBridge2026
                         modifiedProperties.Add($"grandTotalTitle -> {title}");
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -2999,7 +2999,7 @@ namespace RevitMCPBridge2026
                         newName = newSchedule.Name;
                     }
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3105,7 +3105,7 @@ namespace RevitMCPBridge2026
 
                     var fieldIndex = scheduleField.FieldIndex;
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return Newtonsoft.Json.JsonConvert.SerializeObject(new
                     {
@@ -3495,7 +3495,7 @@ namespace RevitMCPBridge2026
                     // Delete the schedule
                     doc.Delete(scheduleId);
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
@@ -3558,7 +3558,7 @@ namespace RevitMCPBridge2026
                     // Force document regeneration which will refresh schedules
                     doc.Regenerate();
 
-                    trans.Commit();
+                    trans.CommitAndCheck();
                 }
 
                 // Get updated row count
