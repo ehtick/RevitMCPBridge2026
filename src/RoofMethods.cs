@@ -623,7 +623,7 @@ namespace RevitMCPBridge
         /// Parameters:
         /// - roofId: ID of the roof element
         /// - edgeIndex: index of the edge (0-based)
-        /// - slopeAngle: slope angle in radians
+        /// - slopeAngle: slope angle in degrees (e.g. 30)
         /// - definesSlope: (optional) whether this edge defines slope (default true)
         /// </summary>
         [MCPMethod("setRoofSlopeByEdge", Category = "Roof", Description = "Set the slope angle for a specific edge of a footprint roof")]
@@ -669,7 +669,10 @@ namespace RevitMCPBridge
                                 roof.set_DefinesSlope(mc, definesSlope);
                                 if (definesSlope)
                                 {
-                                    roof.set_SlopeAngle(mc, slopeAngle);
+                                    // slopeAngle is degrees; set_SlopeAngle takes a
+                                    // rise/run ratio despite its name (see
+                                    // createRoof/modifyRoofSlope)
+                                    roof.set_SlopeAngle(mc, Math.Tan(slopeAngle * Math.PI / 180.0));
                                 }
                                 found = true;
                                 break;

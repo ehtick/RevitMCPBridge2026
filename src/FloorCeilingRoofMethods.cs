@@ -1617,7 +1617,9 @@ namespace RevitMCPBridge
                         {
                             // Set slope on this edge
                             roof.set_DefinesSlope(closestEdge, true);
-                            roof.set_SlopeAngle(closestEdge, Math.Atan(slopeValue)); // Convert slope ratio to radians
+                            // set_SlopeAngle takes a rise/run ratio despite its name
+                            // (see createRoof/modifyRoofSlope) — slopeValue already is one
+                            roof.set_SlopeAngle(closestEdge, slopeValue);
                             edgesModified.Add(closestEdgeIndex);
                         }
                     }
