@@ -3331,6 +3331,7 @@ namespace RevitMCPBridge
                         }
 
                         int viewsExported = 0;
+                        var failedViews = new List<object>();
 
                         // Copy each drafting view from source to destination
                         foreach (var sourceView in views)
@@ -3354,29 +3355,47 @@ namespace RevitMCPBridge
                                     trans.CommitAndCheck();
                                 }
 
-                                // Copy elements
+                                // Copy elements — a failed copy must NOT count
+                                // as exported: previously the exception was
+                                // swallowed, the empty view committed, and the
+                                // export reported success with blank views
                                 if (elementsInView.Count > 0 && newView != null)
                                 {
-                                    using (var trans = new Transaction(newDoc, "Copy Elements"))
+                                    try
                                     {
-                                        trans.Start();
-                                        try
+                                        using (var trans = new Transaction(newDoc, "Copy Elements"))
                                         {
+                                            trans.Start();
                                             ElementTransformUtils.CopyElements(
                                                 sourceView,
                                                 elementsInView,
                                                 newView,
                                                 Transform.Identity,
                                                 new CopyPasteOptions());
+                                            trans.CommitAndCheck();
                                         }
-                                        catch { }
-                                        trans.CommitAndCheck();
+                                    }
+                                    catch (Exception copyEx)
+                                    {
+                                        // Transaction already rolled back by dispose;
+                                        // remove the empty shell view and record the failure
+                                        using (var cleanup = new Transaction(newDoc, "Remove Empty View"))
+                                        {
+                                            cleanup.Start();
+                                            try { newDoc.Delete(newView.Id); } catch { }
+                                            cleanup.CommitAndCheck();
+                                        }
+                                        failedViews.Add(new { view = sourceView.Name, error = copyEx.Message });
+                                        continue;
                                     }
                                 }
 
                                 viewsExported++;
                             }
-                            catch { }
+                            catch (Exception viewEx)
+                            {
+                                failedViews.Add(new { view = sourceView.Name, error = viewEx.Message });
+                            }
                         }
 
                         // Light cleanup - just remove default views we don't need
@@ -3434,7 +3453,9 @@ namespace RevitMCPBridge
                             category,
                             file = filePath,
                             viewCount = viewsExported,
-                            status = "success"
+                            failedViewCount = failedViews.Count,
+                            failedViews,
+                            status = failedViews.Count == 0 ? "success" : "partial"
                         });
 
                         successCount++;
