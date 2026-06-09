@@ -372,25 +372,43 @@ namespace RevitMCPBridge
 
     public class DetailImportHandler : IExternalEventHandler
     {
-        public List<string> FilesToImport { get; set; } = new List<string>();
+        // Lock-guarded accumulation: Raise coalesces while pending, so a
+        // straight property assignment could drop a batch queued between
+        // Raise and Execute
+        private readonly object _sync = new object();
+        private readonly List<string> _filesToImport = new List<string>();
+
+        public List<string> FilesToImport
+        {
+            get { lock (_sync) { return new List<string>(_filesToImport); } }
+            set { lock (_sync) { if (value != null) _filesToImport.AddRange(value); } }
+        }
+
         public Action<int, int, List<string>> OnComplete { get; set; }
 
         public void Execute(UIApplication app)
         {
-            if (FilesToImport == null || FilesToImport.Count == 0)
+            List<string> files;
+            lock (_sync)
+            {
+                files = new List<string>(_filesToImport);
+                _filesToImport.Clear();
+            }
+
+            if (files.Count == 0)
                 return;
 
             var doc = app.ActiveUIDocument?.Document;
             if (doc == null)
             {
-                OnComplete?.Invoke(0, FilesToImport.Count, new List<string> { "No active document" });
+                OnComplete?.Invoke(0, files.Count, new List<string> { "No active document" });
                 return;
             }
 
             var errors = new List<string>();
             int imported = 0;
 
-            foreach (var rvtPath in FilesToImport)
+            foreach (var rvtPath in files)
             {
                 string error;
                 var success = ImportSingleDetail(app, doc, rvtPath, out error);
@@ -400,8 +418,7 @@ namespace RevitMCPBridge
                     errors.Add($"{Path.GetFileNameWithoutExtension(rvtPath)}: {error}");
             }
 
-            OnComplete?.Invoke(imported, FilesToImport.Count, errors);
-            FilesToImport.Clear();
+            OnComplete?.Invoke(imported, files.Count, errors);
         }
 
         private bool ImportSingleDetail(UIApplication uiApp, Document targetDoc, string rvtPath, out string errorMessage)
