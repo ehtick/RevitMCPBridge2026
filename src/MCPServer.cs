@@ -88,6 +88,26 @@ namespace RevitMCPBridge
         private static readonly Dictionary<string, Func<UIApplication, JObject, string>> _methodRegistry =
             new Dictionary<string, Func<UIApplication, JObject, string>>(StringComparer.OrdinalIgnoreCase);
 
+        // Guards lazy registry init: each client connection runs on its own
+        // threadpool task, so two first-requests arriving concurrently would
+        // otherwise populate the non-thread-safe Dictionary in parallel.
+        private static readonly object _registryInitLock = new object();
+        private static volatile bool _registryInitialized;
+
+        /// <summary>
+        /// Thread-safe, idempotent registry initialization.
+        /// </summary>
+        public static void EnsureMethodRegistryInitialized()
+        {
+            if (_registryInitialized) return;
+            lock (_registryInitLock)
+            {
+                if (_registryInitialized) return;
+                InitializeMethodRegistry();
+                _registryInitialized = true;
+            }
+        }
+
         #region Level 3: Autonomous Intelligence Fields
 
         /// <summary>
@@ -320,10 +340,7 @@ namespace RevitMCPBridge
         /// </summary>
         public static string ExecuteMethod(UIApplication uiApp, string methodName, JObject parameters)
         {
-            if (_methodRegistry.Count == 0)
-            {
-                InitializeMethodRegistry();
-            }
+            EnsureMethodRegistryInitialized();
 
             if (!_methodRegistry.TryGetValue(methodName, out var method))
             {
@@ -359,10 +376,7 @@ namespace RevitMCPBridge
         /// </summary>
         public static string GetBatchMethods(UIApplication uiApp, JObject parameters)
         {
-            if (_methodRegistry.Count == 0)
-            {
-                InitializeMethodRegistry();
-            }
+            EnsureMethodRegistryInitialized();
 
             return JsonConvert.SerializeObject(new
             {
@@ -477,6 +491,10 @@ namespace RevitMCPBridge
 
             try
             {
+                // Populate the registry before accepting connections so no
+                // request ever triggers the (formerly racy) lazy init.
+                EnsureMethodRegistryInitialized();
+
                 _cancellationTokenSource = new CancellationTokenSource();
                 _serverTask = RunServer(_cancellationTokenSource.Token);
                 _isRunning = true;
@@ -3744,10 +3762,7 @@ namespace RevitMCPBridge
 
                     default:
                         // Check registry for dynamically registered methods (BMO, CIPS, etc.)
-                        if (_methodRegistry.Count == 0)
-                        {
-                            InitializeMethodRegistry();
-                        }
+                        EnsureMethodRegistryInitialized();
 
                         if (_methodRegistry.TryGetValue(method, out var registeredMethod))
                         {
