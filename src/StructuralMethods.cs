@@ -2412,7 +2412,12 @@ namespace RevitMCPBridge2026
                 var baseLevelId = parameters["baseLevelId"].Value<long>();
                 var topLevelId = parameters["topLevelId"].Value<long>();
                 var startPointArr = parameters["startPoint"].ToObject<double[]>();
-                var width = parameters["width"]?.Value<double>() ?? 48.0; // inches
+                // width is FEET (bridge-wide convention — createRamp/createStair/
+                // createWallOpening all take feet); widthInches is the explicit
+                // inch alternative. Previously width was silently inches.
+                double widthFeet = parameters["widthInches"] != null
+                    ? parameters["widthInches"].Value<double>() / 12.0
+                    : (parameters["width"]?.Value<double>() ?? 4.0);
                 var inclination = parameters["inclination"]?.Value<double>() ?? 30.0; // degrees
 
                 // Get levels
@@ -2428,9 +2433,6 @@ namespace RevitMCPBridge2026
                 double rise = topLevel.Elevation - baseLevel.Elevation;
                 double inclinationRad = inclination * Math.PI / 180.0;
                 double run = rise / Math.Tan(inclinationRad);
-
-                // Convert width from inches to feet
-                double widthFeet = width / 12.0;
 
                 // Start point
                 var startPoint = new XYZ(startPointArr[0], startPointArr[1], baseLevel.Elevation);
@@ -2538,7 +2540,8 @@ namespace RevitMCPBridge2026
                         rise = rise,
                         run = run,
                         inclination = inclination,
-                        widthInches = width,
+                        widthFeet = widthFeet,
+                        widthInches = widthFeet * 12.0,
                         startPoint = new { x = startPoint.X, y = startPoint.Y, z = startPoint.Z },
                         endPoint = new { x = endPoint.X, y = endPoint.Y, z = endPoint.Z },
                         message = escalatorType != null
