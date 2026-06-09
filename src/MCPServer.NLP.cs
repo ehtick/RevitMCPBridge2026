@@ -207,7 +207,9 @@ namespace RevitMCPBridge
                         ["method"] = command.Method,
                         ["description"] = command.Description
                     };
-                    return resultObj.ToString();
+                    // Formatting.None is required: the pipe transport is
+                    // newline-delimited, so multi-line JSON corrupts framing.
+                    return resultObj.ToString(Newtonsoft.Json.Formatting.None);
                 }
                 catch
                 {
