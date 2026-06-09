@@ -542,6 +542,43 @@ namespace RevitMCPBridge
 
                 var closedTitle = docToClose.Title;
 
+                // The Revit API forbids closing the ACTIVE document
+                // (Document.Close throws). If another saved document is open,
+                // activate it first so the close can proceed.
+                var activeDoc = uiApp.ActiveUIDocument?.Document;
+                if (activeDoc != null && activeDoc.Title.Equals(docToClose.Title, StringComparison.OrdinalIgnoreCase))
+                {
+                    Document switchTo = null;
+                    foreach (Document openDoc in uiApp.Application.Documents)
+                    {
+                        if (!openDoc.Title.Equals(docToClose.Title, StringComparison.OrdinalIgnoreCase)
+                            && !openDoc.IsLinked
+                            && !string.IsNullOrEmpty(openDoc.PathName))
+                        {
+                            switchTo = openDoc;
+                            break;
+                        }
+                    }
+
+                    if (switchTo == null)
+                    {
+                        if (save && docToClose.IsModified)
+                        {
+                            docToClose.Save();
+                        }
+                        return JsonConvert.SerializeObject(new
+                        {
+                            success = false,
+                            error = $"'{closedTitle}' is the active document and no other saved document is open to switch to. " +
+                                    "Revit cannot close the active document through the API." +
+                                    (save ? " The document was saved." : ""),
+                            saved = save && !docToClose.IsModified
+                        });
+                    }
+
+                    uiApp.OpenAndActivateDocument(switchTo.PathName);
+                }
+
                 if (save && docToClose.IsModified)
                 {
                     docToClose.Save();
