@@ -1877,12 +1877,15 @@ namespace RevitMCPBridge2026
                         int categorySkipped = 0;
                         int categoryFailed = 0;
 
-                        // Get elements in this category
-                        var collector = new FilteredElementCollector(doc)
+                        // Get elements in this category — materialized: setting
+                        // the workset param while iterating a live collector
+                        // invalidates the iterator mid-batch
+                        var elements = new FilteredElementCollector(doc)
                             .OfCategory(category)
-                            .WhereElementIsNotElementType();
+                            .WhereElementIsNotElementType()
+                            .ToElements();
 
-                        foreach (Element elem in collector)
+                        foreach (Element elem in elements)
                         {
                             totalProcessed++;
 

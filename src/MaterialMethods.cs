@@ -919,10 +919,13 @@ namespace RevitMCPBridge2026
                     failureOptions.SetFailuresPreprocessor(new WarningSwallower());
                     trans.SetFailureHandlingOptions(failureOptions);
 
-                    var collector = new FilteredElementCollector(doc)
-                        .WhereElementIsNotElementType();
+                    // Materialized: setting parameters while iterating a live
+                    // collector invalidates the iterator mid-batch
+                    var elements = new FilteredElementCollector(doc)
+                        .WhereElementIsNotElementType()
+                        .ToElements();
 
-                    foreach (Element elem in collector)
+                    foreach (Element elem in elements)
                     {
                         // Check and replace MaterialId parameter
                         Parameter matParam = elem.get_Parameter(BuiltInParameter.MATERIAL_ID_PARAM);

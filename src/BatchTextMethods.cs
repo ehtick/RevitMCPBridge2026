@@ -842,11 +842,14 @@ namespace RevitMCPBridge2026
                 {
                     trans.Start();
 
-                    // Get all dimension types
-                    var collector = new FilteredElementCollector(doc)
-                        .OfClass(typeof(DimensionType));
+                    // Get all dimension types — materialized: mutating elements
+                    // while iterating a live collector invalidates the iterator
+                    var dimTypes = new FilteredElementCollector(doc)
+                        .OfClass(typeof(DimensionType))
+                        .Cast<DimensionType>()
+                        .ToList();
 
-                    foreach (DimensionType dimType in collector)
+                    foreach (DimensionType dimType in dimTypes)
                     {
                         bool modified = false;
                         string originalFont = "";
@@ -927,11 +930,14 @@ namespace RevitMCPBridge2026
                 {
                     trans.Start();
 
-                    // Get all dimension types
-                    var collector = new FilteredElementCollector(doc)
-                        .OfClass(typeof(DimensionType));
+                    // Get all dimension types — materialized: renaming/mutating
+                    // while iterating a live collector invalidates the iterator
+                    var dimTypes = new FilteredElementCollector(doc)
+                        .OfClass(typeof(DimensionType))
+                        .Cast<DimensionType>()
+                        .ToList();
 
-                    foreach (DimensionType dimType in collector)
+                    foreach (DimensionType dimType in dimTypes)
                     {
                         string originalName = dimType.Name;
 
@@ -1068,10 +1074,14 @@ namespace RevitMCPBridge2026
                 {
                     trans.Start();
 
-                    var collector = new FilteredElementCollector(doc)
-                        .OfClass(typeof(TextNoteType));
+                    // Materialized: mutating elements while iterating a live
+                    // collector invalidates the iterator
+                    var textTypes = new FilteredElementCollector(doc)
+                        .OfClass(typeof(TextNoteType))
+                        .Cast<TextNoteType>()
+                        .ToList();
 
-                    foreach (TextNoteType textType in collector)
+                    foreach (TextNoteType textType in textTypes)
                     {
                         try
                         {
