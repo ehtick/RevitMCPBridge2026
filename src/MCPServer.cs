@@ -3657,10 +3657,10 @@ namespace RevitMCPBridge
                     // ============================================================
 
                     case "executeGoal":
-                        return await IntelligenceMethods.ExecuteGoal(_currentUiApp, parameters);
+                        return await ExecuteInRevitContext(uiApp => IntelligenceMethods.ExecuteGoal(uiApp, parameters).GetAwaiter().GetResult());
 
                     case "approveTask":
-                        return await IntelligenceMethods.ApproveTask(_currentUiApp, parameters);
+                        return await ExecuteInRevitContext(uiApp => IntelligenceMethods.ApproveTask(uiApp, parameters).GetAwaiter().GetResult());
 
                     case "cancelTask":
                         return IntelligenceMethods.CancelTask(_currentUiApp, parameters);
@@ -4679,11 +4679,10 @@ namespace RevitMCPBridge
 
         private Task<string> GetElements(JObject parameters)
         {
-            return Task.Run(() =>
+            return ExecuteInRevitContext(uiApp =>
             {
                 try
                 {
-                    var uiApp = RevitMCPBridgeApp.GetUIApplication();
                     if (uiApp?.ActiveUIDocument?.Document == null)
                     {
                         return JsonConvert.SerializeObject(new
@@ -4796,7 +4795,7 @@ namespace RevitMCPBridge
         
         private Task<string> GetElementProperties(JObject parameters)
         {
-            return Task.Run(() =>
+            return ExecuteInRevitContext(uiApp =>
             {
                 try
                 {
@@ -4810,7 +4809,6 @@ namespace RevitMCPBridge
                         });
                     }
                     
-                    var uiApp = RevitMCPBridgeApp.GetUIApplication();
                     if (uiApp?.ActiveUIDocument?.Document == null)
                     {
                         return JsonConvert.SerializeObject(new
@@ -4940,11 +4938,10 @@ namespace RevitMCPBridge
         
         private Task<string> GetViews(JObject parameters)
         {
-            return Task.Run(() =>
+            return ExecuteInRevitContext(uiApp =>
             {
                 try
                 {
-                    var uiApp = RevitMCPBridgeApp.GetUIApplication();
                     if (uiApp?.ActiveUIDocument?.Document == null)
                     {
                         return JsonConvert.SerializeObject(new
@@ -5140,11 +5137,10 @@ namespace RevitMCPBridge
 
         private Task<string> GetCategories()
         {
-            return Task.Run(() =>
+            return ExecuteInRevitContext(uiApp =>
             {
                 try
                 {
-                    var uiApp = RevitMCPBridgeApp.GetUIApplication();
                     if (uiApp?.ActiveUIDocument?.Document == null)
                     {
                         return JsonConvert.SerializeObject(new
@@ -5191,7 +5187,7 @@ namespace RevitMCPBridge
         
         private Task<string> GetParameters(JObject parameters)
         {
-            return Task.Run(() =>
+            return ExecuteInRevitContext(uiApp =>
             {
                 try
                 {
@@ -5205,7 +5201,6 @@ namespace RevitMCPBridge
                         });
                     }
                     
-                    var uiApp = RevitMCPBridgeApp.GetUIApplication();
                     if (uiApp?.ActiveUIDocument?.Document == null)
                     {
                         return JsonConvert.SerializeObject(new
