@@ -145,9 +145,12 @@ namespace RevitMCPBridge
                     // Auto-start MCP server after application is ready
                     try
                     {
-                        _mcpServer = new MCPServer();
-                        _mcpServer.Start();
-                        Log.Information("MCP Server started automatically on Revit startup");
+                        if (_mcpServer == null)
+                        {
+                            _mcpServer = new MCPServer();
+                            _mcpServer.Start();
+                            Log.Information("MCP Server started automatically on Revit startup");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -176,6 +179,11 @@ namespace RevitMCPBridge
                 application.ControlledApplication.DocumentChanged +=
                     (s, e) => ElementInfoPanel.InvalidateModelSummary();
                 Log.Information("Model Copilot panel events initialized");
+
+                // FALLBACK: when the unsigned-add-in security dialog defers this add-in's load past
+                // ApplicationInitialized, that event has already fired and the server would never
+                // start. First Idling always comes — start there if the event was missed.
+                application.Idling += OnFirstIdleStartServer;
 
                 // Create ribbon tab - MCP Bridge gets its own tab!
                 try
@@ -1010,6 +1018,31 @@ namespace RevitMCPBridge
         }
 
         // Dialog handling event
+        /// <summary>Late-load fallback: if ApplicationInitialized fired before this add-in loaded
+        /// (security dialog left open during boot), bring the server up on the first Idling.</summary>
+        private static void OnFirstIdleStartServer(object sender, IdlingEventArgs e)
+        {
+            try
+            {
+                var uiApp = sender as UIApplication;
+                if (uiApp == null) return;
+                if (_mcpServer != null) { uiApp.Idling -= OnFirstIdleStartServer; return; }
+
+                _uiApplication = uiApp;
+                if (_externalEvent == null)
+                {
+                    try { _externalEvent = ExternalEvent.Create(_requestHandler); Log.Information("ExternalEvent created on first Idling (late add-in load)"); }
+                    catch (Exception ex) { Log.Error(ex, "ExternalEvent create on Idling failed"); }
+                }
+                try { ChangeTracker.Instance.Initialize(_uiApplication); } catch { }
+                _mcpServer = new MCPServer();
+                _mcpServer.Start();
+                Log.Information("MCP Server started on first Idling — ApplicationInitialized was missed (add-in loaded late)");
+                uiApp.Idling -= OnFirstIdleStartServer;
+            }
+            catch (Exception ex) { Log.Error(ex, "OnFirstIdleStartServer failed"); }
+        }
+
         private void OnDialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
         {
             try
