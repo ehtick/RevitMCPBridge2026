@@ -666,7 +666,20 @@ namespace RevitMCPBridge
                 catch { ans = null; }
                 if (ans == null)
                 {
-                    report.AppendLine(no + ". " + step + "\n   → ✗ the model/API stopped responding — halted here.");
+                    // RESILIENCE: a single Ollama/API drop must not kill the whole batch —
+                    // wait out the blip and retry this step once before giving up.
+                    try { onTool?.Invoke("step " + no + "/" + n + " — model dropped; waiting and retrying the step…"); } catch { }
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+                        ans = await ChatAsync(focused, context, localHist,
+                            s => { try { onTool?.Invoke("step " + no + "/" + n + " (retry) — " + s); } catch { } }).ConfigureAwait(false);
+                    }
+                    catch { ans = null; }
+                }
+                if (ans == null)
+                {
+                    report.AppendLine(no + ". " + step + "\n   → ✗ the model/API stopped responding (after a retry) — halted here.");
                     break;
                 }
                 completed++;

@@ -38,3 +38,4 @@
 - "Delete all the text notes": getTextNotes (model-wide) gives every note's id — delete those ids. select_category is ACTIVE-VIEW scoped and will miss notes in other views.
 - Dimension ONE wall's length: dimension_walls with just that wall id (it routes to dimensionWallLength automatically).
 - "Delete all the X" (text notes/walls/doors/rooms): call delete_category(category) — it reads the elements itself and asks the user to confirm. Never collect delete ids yourself when a whole category is meant.
+- HOSTED ELEMENTS AT A POINT: if the user asks for a door/window at a location where NO wall exists, say so and ask which wall they mean — NEVER silently pick a different wall and place it there.
