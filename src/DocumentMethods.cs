@@ -64,11 +64,46 @@ namespace RevitMCPBridge
                     return JsonConvert.SerializeObject(new { success = false, error = "Failed to create document" });
                 }
 
+                // When activate (default true), give the new project a real UI window so it
+                // becomes the ActiveUIDocument. NewProjectDocument alone yields a background DB
+                // doc with no window — which can NOT be activated afterwards (Revit only activates
+                // docs opened via OpenAndActivateDocument). So we save it to disk, then re-open it
+                // with OpenAndActivateDocument, which opens a view and makes it active.
+                var activate = parameters["activate"]?.Value<bool>() ?? true;
+                if (activate)
+                {
+                    var savePath = parameters["savePath"]?.ToString();
+                    if (string.IsNullOrEmpty(savePath))
+                    {
+                        var dir = Path.Combine(Path.GetTempPath(), "RevitMCP_NewDocs");
+                        Directory.CreateDirectory(dir);
+                        savePath = Path.Combine(dir, "MCP_New_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".rvt");
+                    }
+
+                    var saveOpts = new SaveAsOptions { OverwriteExistingFile = true };
+                    newDoc.SaveAs(savePath, saveOpts);
+                    newDoc.Close(false);
+
+                    var uidoc = uiApp.OpenAndActivateDocument(savePath);
+                    var activeDoc = uidoc?.Document;
+
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = true,
+                        documentTitle = activeDoc?.Title,
+                        pathName = activeDoc?.PathName,
+                        isWorkshared = activeDoc?.IsWorkshared ?? false,
+                        activated = true,
+                        message = "New document created and activated"
+                    });
+                }
+
                 return JsonConvert.SerializeObject(new
                 {
                     success = true,
                     documentTitle = newDoc.Title,
                     isWorkshared = newDoc.IsWorkshared,
+                    activated = false,
                     message = "New document created"
                 });
             }
