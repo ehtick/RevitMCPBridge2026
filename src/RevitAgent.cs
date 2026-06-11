@@ -993,8 +993,12 @@ namespace RevitMCPBridge
                 LastChatToolTrace.Clear();   // code-owned record of what was actually called (planner carries it between steps)
                 _lastToolSig = null; _toolSigCount = 0;
                 int followThroughNudges = 0;
+                var chatClock = System.Diagnostics.Stopwatch.StartNew();   // wall-clock budget: stay responsive under GPU overload
                 for (int turn = 0; turn < 24; turn++)   // deeper agentic loop — plan, act, verify, continue (raised for batch/multi-task prompts)
                 {
+                    if (chatClock.Elapsed > TimeSpan.FromMinutes(8))
+                        return "⏱ I had to stop — this request is taking too long (the local model is overloaded). " +
+                               "Everything completed so far IS in the model; ask me to continue with what is left.";
                     var msg = await PostChatAsync(OllamaModel, messages, tools, false).ConfigureAwait(false);
                     if (msg == null) return null;   // unreachable / API error -> caller shows fallback
 
