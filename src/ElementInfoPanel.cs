@@ -843,12 +843,20 @@ namespace RevitMCPBridge
         /// Read-only (text only) so it runs on a background thread — Revit is never blocked.
         /// If Ollama isn't running (e.g. a transferred copy), shows a graceful fallback note.</summary>
         /// <summary>Add a line to the conversation transcript; returns the message TextBlock so it can be updated.</summary>
-        private static TextBlock AppendConvo(string who, string text, bool isUser)
+        private static System.Windows.Controls.RichTextBox AppendConvo(string who, string text, bool isUser)
         {
             var stack = new StackPanel();
             stack.Children.Add(new TextBlock { Text = who, Foreground = isUser ? Ctx : Brushes.LightGreen, FontWeight = FontWeights.Bold, FontSize = 10, Margin = new Thickness(0, 0, 0, 2) });
-            var msg = new TextBlock { Foreground = Brushes.White, FontSize = 12, TextWrapping = TextWrapping.Wrap };
-            RenderMarkdown(msg, text);
+            // read-only RichTextBox so the user can SELECT and Ctrl+C any question or answer
+            // (Weber request) — TextBlocks render fine but cannot be selected.
+            var msg = new System.Windows.Controls.RichTextBox
+            {
+                IsReadOnly = true, IsDocumentEnabled = true,
+                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+                Foreground = Brushes.White, FontSize = 12, Padding = new Thickness(0),
+                MaxWidth = 520, HorizontalAlignment = HorizontalAlignment.Left
+            };
+            RenderMarkdownRtb(msg, text);
             stack.Children.Add(msg);
             var bubble = new Border
             {
@@ -862,6 +870,33 @@ namespace RevitMCPBridge
             _convoPanel.Children.Add(bubble);
             _convoScroll?.ScrollToEnd();
             return msg;
+        }
+
+        /// <summary>Render light markdown into a read-only RichTextBox (selectable chat bubbles).</summary>
+        private static void RenderMarkdownRtb(System.Windows.Controls.RichTextBox rtb, string text)
+        {
+            var para = new System.Windows.Documents.Paragraph { Margin = new Thickness(0) };
+            var lines = (text ?? "").Replace("\r\n", "\n").Split('\n');
+            bool first = true;
+            foreach (var raw in lines)
+            {
+                if (!first) para.Inlines.Add(new LineBreak());
+                first = false;
+                string line = raw;
+                bool header = line.StartsWith("#");
+                if (header) line = line.TrimStart('#', ' ');
+                string trimmed = line.TrimStart();
+                if (trimmed.StartsWith("- ") || trimmed.StartsWith("* ")) line = "   • " + trimmed.Substring(2);
+                foreach (var inl in ParseBold(line, header)) para.Inlines.Add(inl);
+            }
+            var doc = new System.Windows.Documents.FlowDocument(para) { PagePadding = new Thickness(0) };
+            rtb.Document = doc;
+        }
+
+        private static void SetRtbText(System.Windows.Controls.RichTextBox rtb, string text)
+        {
+            var para = new System.Windows.Documents.Paragraph(new Run(text ?? "")) { Margin = new Thickness(0) };
+            rtb.Document = new System.Windows.Documents.FlowDocument(para) { PagePadding = new Thickness(0) };
         }
 
         /// <summary>Render light markdown (**bold**, # headers, - bullets, line breaks) into a TextBlock's inlines.</summary>
@@ -952,7 +987,7 @@ namespace RevitMCPBridge
                         var creply = AppendConvo("Copilot", "working…", false);
                         string res = await Task.Run(() => RevitAgent.ConfirmPendingDestructive());
                         bool ok = res != null && (res.Contains("\"success\":true") || res.Contains("\"success\": true"));
-                        RenderMarkdown(creply, ok ? "✓ Done — the action completed." : "The action did not complete.");
+                        RenderMarkdownRtb(creply, ok ? "✓ Done — the action completed." : "The action did not complete.");
                         _convoScroll?.ScrollToEnd();
                         _lastAnswer = ok ? "✓ Done — the action completed." : "The action did not complete."; _chatBusy = false;
                         return;
@@ -1014,18 +1049,18 @@ namespace RevitMCPBridge
                     // Background thread so the agent's in-loop tool calls (which marshal to Revit's
                     // API thread and block) never deadlock the UI thread.
                     answer = await Task.Run(() => RevitAgent.ChatPlannedAsync(question, ctx, _history,
-                        s => { try { _win.Dispatcher.Invoke(() => { reply.Text = s; _convoScroll?.ScrollToEnd(); }); } catch { } }));
+                        s => { try { _win.Dispatcher.Invoke(() => { SetRtbText(reply, s); _convoScroll?.ScrollToEnd(); }); } catch { } }));
                     // local models occasionally emit an empty turn — one clean retry beats
                     // showing the user "(the model returned nothing)"
                     if (string.IsNullOrWhiteSpace(answer))
                         answer = await Task.Run(() => RevitAgent.ChatPlannedAsync(question, ctx, _history,
-                            s => { try { _win.Dispatcher.Invoke(() => { reply.Text = s; _convoScroll?.ScrollToEnd(); }); } catch { } }));
+                            s => { try { _win.Dispatcher.Invoke(() => { SetRtbText(reply, s); _convoScroll?.ScrollToEnd(); }); } catch { } }));
                 }
 
-                if (answer == null) answer = "No local model running — start Ollama to chat. Quick commands still work:  8'  ·  make it CMU";
+                if (answer == null) answer = "The local AI did not respond — I health-checked Ollama and even tried restarting it. If this keeps happening, check that Ollama is installed and the model is pulled (ollama.com). Quick commands still work:  8'  ·  make it CMU";
                 else if (string.IsNullOrWhiteSpace(answer)) answer = "(the model returned nothing)";
 
-                RenderMarkdown(reply, answer);
+                RenderMarkdownRtb(reply, answer);
                 _convoScroll?.ScrollToEnd();
                 _lastAnswer = answer; _chatBusy = false;
 
