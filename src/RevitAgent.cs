@@ -209,7 +209,7 @@ namespace RevitMCPBridge
             }
             catch (Exception ex) { Log.Debug($"SaveConfig: {ex.Message}"); }
         }
-        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
+        private static readonly HttpClient _http = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };   // per-request CTS governs — see PostChatOnceAsync
 
         /// <summary>Load optional config (model_copilot.json next to the DLL) — endpoint, model, on/off.</summary>
         private static void LoadConfig()
@@ -2112,6 +2112,20 @@ namespace RevitMCPBridge
         /// Returns the assistant message {content, tool_calls}, normalized across both response shapes.</summary>
         private static async Task<JObject> PostChatAsync(string model, JArray messages, JArray tools, bool think)
         {
+            // RESILIENCE (Weber hard requirement: the user must almost never see "no local model"):
+            // attempt with a normal allowance; on failure, health-check Ollama, SELF-START it if
+            // it is actually down, then retry once with a cold-load allowance (a 25GB model being
+            // re-loaded after eviction can take minutes — that is not "no model running").
+            var first = await PostChatOnceAsync(model, messages, tools, think, TimeSpan.FromSeconds(150)).ConfigureAwait(false);
+            if (first != null) return first;
+            if (ApiType == "openai") return null;   // hosted APIs: no local self-heal to do
+            bool alive = await EnsureOllamaAliveAsync().ConfigureAwait(false);
+            Log.Information("PostChat failed once — Ollama {State}; retrying with cold-load allowance", alive ? "reachable (slow/loading)" : "self-start attempted");
+            return await PostChatOnceAsync(model, messages, tools, think, TimeSpan.FromSeconds(420)).ConfigureAwait(false);
+        }
+
+        private static async Task<JObject> PostChatOnceAsync(string model, JArray messages, JArray tools, bool think, TimeSpan allowance)
+        {
             try
             {
                 bool openai = ApiType == "openai";
@@ -2127,12 +2141,13 @@ namespace RevitMCPBridge
                     // identical cert prompts pass/fail randomly across runs).
                     payload["options"] = new JObject { ["num_ctx"] = 24576, ["temperature"] = 0.15 };
                 }
+                using (var cts = new System.Threading.CancellationTokenSource(allowance))
                 using (var req = new HttpRequestMessage(HttpMethod.Post, OllamaUrl))
                 {
                     req.Content = new StringContent(payload.ToString(Formatting.None), Encoding.UTF8, "application/json");
                     if (openai && !string.IsNullOrEmpty(ApiKey))
                         req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiKey);
-                    var r = await _http.SendAsync(req).ConfigureAwait(false);
+                    var r = await _http.SendAsync(req, cts.Token).ConfigureAwait(false);
                     string txt = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (!r.IsSuccessStatusCode) { Log.Debug($"chat {(int)r.StatusCode}: {txt}"); return null; }
                     var jo = JObject.Parse(txt);
@@ -2140,7 +2155,47 @@ namespace RevitMCPBridge
                     return (openai ? jo["choices"]?[0]?["message"] : jo["message"]) as JObject;
                 }
             }
-            catch (Exception ex) { Log.Debug($"PostChatAsync: {ex.Message}"); return null; }
+            catch (Exception ex) { Log.Debug($"PostChatOnce: {ex.Message}"); return null; }
+        }
+
+        /// <summary>Health-check the Ollama server; if unreachable, START it (idempotent — exits
+        /// immediately if the port is already bound) and wait for it to come up.</summary>
+        private static async Task<bool> EnsureOllamaAliveAsync()
+        {
+            string baseUrl;
+            try { baseUrl = new Uri(OllamaUrl).GetLeftPart(UriPartial.Authority); }
+            catch { baseUrl = "http://localhost:11434"; }
+            if (await PingOllamaAsync(baseUrl).ConfigureAwait(false)) return true;
+            try
+            {
+                string exe = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Programs", "Ollama", "ollama.exe");
+                if (!System.IO.File.Exists(exe)) exe = "ollama";   // PATH fallback
+                var psi = new System.Diagnostics.ProcessStartInfo(exe, "serve") { UseShellExecute = false, CreateNoWindow = true };
+                System.Diagnostics.Process.Start(psi);
+                Log.Information("Ollama unreachable — self-start attempted ({Exe})", exe);
+            }
+            catch (Exception ex) { Log.Debug($"Ollama self-start failed: {ex.Message}"); }
+            for (int i = 0; i < 10; i++)
+            {
+                await Task.Delay(3000).ConfigureAwait(false);
+                if (await PingOllamaAsync(baseUrl).ConfigureAwait(false)) return true;
+            }
+            return false;
+        }
+
+        private static async Task<bool> PingOllamaAsync(string baseUrl)
+        {
+            try
+            {
+                using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3)))
+                {
+                    var r = await _http.GetAsync(baseUrl + "/", cts.Token).ConfigureAwait(false);
+                    return r.IsSuccessStatusCode;
+                }
+            }
+            catch { return false; }
         }
 
         // ---- TOOL TIERING: with ~80 tools, sending every schema each turn bloats the prompt and makes
