@@ -909,41 +909,40 @@ namespace RevitMCPBridge
                     failureOptions.SetFailuresPreprocessor(new WarningSwallower());
                     trans.SetFailureHandlingOptions(failureOptions);
 
-                    var start = new XYZ(startPoint[0], startPoint[1], startPoint[2]);
-                    var end = new XYZ(endPoint[0], endPoint[1], endPoint[2]);
-                    var line = Line.CreateBound(start, end);
-
-                    // In Revit 2026, use NewModelCurve with room boundary line style
+                    // Build the sketch plane at the view's level elevation so the
+                    // separation line sits in the plan's work plane.
                     var sketchPlane = view.SketchPlane;
                     if (sketchPlane == null)
                     {
-                        // Create a sketch plane at the view's level
                         var levelId = view.GenLevel?.Id ?? doc.ActiveView.GenLevel.Id;
-                        var level = doc.GetElement(levelId) as Level;
-                        var plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, level.Elevation));
+                        var lvl = doc.GetElement(levelId) as Level;
+                        var elevZ = lvl?.Elevation ?? 0.0;
+                        var plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, elevZ));
                         sketchPlane = SketchPlane.Create(doc, plane);
                     }
 
-                    var modelCurve = doc.Create.NewModelCurve(line, sketchPlane);
+                    // Project endpoints onto the sketch plane elevation so the curve is planar.
+                    var planeZ = sketchPlane.GetPlane().Origin.Z;
+                    var start = new XYZ(startPoint[0], startPoint[1], planeZ);
+                    var end = new XYZ(endPoint[0], endPoint[1], planeZ);
+                    var line = Line.CreateBound(start, end);
 
-                    // Set it as room boundary line by changing its subcategory
-                    var roomBoundaryCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_RoomSeparationLines);
-                    if (roomBoundaryCat != null)
-                    {
-                        // Get the graphics style for room separation lines
-                        var graphicsStyle = roomBoundaryCat.GetGraphicsStyle(GraphicsStyleType.Projection);
-                        if (graphicsStyle != null)
-                        {
-                            modelCurve.LineStyle = graphicsStyle;
-                        }
-                    }
+                    // Use NewRoomBoundaryLines so the curve is an ACTUAL room-bounding
+                    // separation line (NewModelCurve only mimics the look and does NOT bound rooms).
+                    var curveArray = new CurveArray();
+                    curveArray.Append(line);
+                    var boundaryLines = doc.Create.NewRoomBoundaryLines(sketchPlane, curveArray, view);
+
+                    int sepId = -1;
+                    foreach (ModelCurve mc in boundaryLines) { sepId = (int)mc.Id.Value; break; }
 
                     trans.CommitAndCheck();
 
                     return ResponseBuilder.Success()
-                        .With("separationLineId", (int)modelCurve.Id.Value)
+                        .With("separationLineId", sepId)
                         .With("viewId", (int)viewId.Value)
                         .With("length", line.Length)
+                        .With("roomBounding", true)
                         .Build();
                 }
             }
