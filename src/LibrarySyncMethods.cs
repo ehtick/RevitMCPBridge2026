@@ -18,7 +18,8 @@ namespace RevitMCPBridge
     /// </summary>
     public static class LibrarySyncMethods
     {
-        private static readonly string DefaultLibraryPath = @"D:\Revit Detail Libraries";
+        // Configured in bridge_config.json (paths.libraryRootDirectory); per-call libraryPath overrides
+        private static string DefaultLibraryPath => BridgeConfig.LibraryRootDirectory;
         private static readonly string FirmLibrariesFolder = "Firm Libraries";
         private static readonly string FirmProfilesFile = "firm_profiles.json";
         private static readonly string IndexFileName = "library_index.json";

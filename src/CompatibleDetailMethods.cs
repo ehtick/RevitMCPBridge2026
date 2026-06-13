@@ -17,13 +17,8 @@ namespace RevitMCPBridge
     public static class CompatibleDetailMethods
     {
         // The firm's detail libraries, in preference order (compatible ones first).
-        private static readonly string[] Libraries = new[]
-        {
-            @"D:\BDArchitect-DetailLibrary-2025",
-            @"D:\003 - RESOURCES\01 - REVIT LIBRARY\REVIT STANDARD DETAILS LIBRARY",
-            @"D:\003 - RESOURCES\01 - REVIT LIBRARY\Revit Details",
-            @"D:\Revit Detail Libraries\Revit Details"
-        };
+        // Configured per machine in bridge_config.json (paths.detailLibrarySearchPaths).
+        private static string[] Libraries => BridgeConfig.DetailLibrarySearchPaths;
 
         /// <summary>Read a .rvt's saved Revit version without opening it. Returns the year (e.g. 2025) or 0 if unknown.</summary>
         public static int RvtVersion(string path)
@@ -67,6 +62,8 @@ namespace RevitMCPBridge
                 string term = parameters["searchTerm"]?.ToString();
                 if (string.IsNullOrWhiteSpace(term))
                     return JsonConvert.SerializeObject(new { success = false, error = "searchTerm is required" });
+                if (Libraries.Length == 0)
+                    return JsonConvert.SerializeObject(new { success = false, error = "No detail libraries configured — set paths.detailLibrarySearchPaths in bridge_config.json" });
                 int.TryParse(uiApp.Application.VersionNumber, out int running);
 
                 var compatible = new List<object>();

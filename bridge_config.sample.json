@@ -1,0 +1,38 @@
+{
+  "user": {
+    "name": ""
+  },
+  "paths": {
+    "logDirectory": "",
+    "capabilitySystemDirectory": "",
+    "knowledgeDirectory": "",
+    "workflowsDirectory": "",
+    "scriptsDirectory": "",
+    "templateSearchPaths": [],
+    "firmTemplatesDirectory": "",
+    "sharedParametersFile": "",
+    "libraryRootDirectory": "",
+    "detailLibraryDirectory": "",
+    "detailLibrarySearchPaths": [],
+    "libraryProfilePaths": {
+      "Details": "",
+      "Families": "",
+      "Legends": "",
+      "Schedules": ""
+    },
+    "fileSearchRoots": []
+  },
+  "families": {
+    "defaultDoorFamilies": [],
+    "defaultWindowFamilies": [],
+    "familySearchPaths": []
+  },
+  "firmProfiles": {
+    "defaultProfileId": ""
+  },
+  "sheetPatterns": {
+    "firmPrefixes": {},
+    "extractedPatterns": {},
+    "patternRuleOverrides": {}
+  }
+}

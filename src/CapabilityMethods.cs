@@ -17,11 +17,11 @@ namespace RevitMCPBridge
     /// </summary>
     public static class CapabilityMethods
     {
-        private static readonly string CapabilitySystemPath = @"D:\RevitMCPBridge2026\capability_system";
-        private static readonly string ToolSpecsPath = Path.Combine(CapabilitySystemPath, "tool_specs");
-        private static readonly string MethodRegistryPath = Path.Combine(CapabilitySystemPath, "method_registry");
-        private static readonly string MethodGymPath = Path.Combine(CapabilitySystemPath, "method_gym");
-        private static readonly string FailureLogsPath = Path.Combine(CapabilitySystemPath, "failure_logs");
+        private static string CapabilitySystemPath => BridgeConfig.CapabilitySystemDirectory;
+        private static string ToolSpecsPath => Path.Combine(CapabilitySystemPath, "tool_specs");
+        private static string MethodRegistryPath => Path.Combine(CapabilitySystemPath, "method_registry");
+        private static string MethodGymPath => Path.Combine(CapabilitySystemPath, "method_gym");
+        private static string FailureLogsPath => Path.Combine(CapabilitySystemPath, "failure_logs");
 
         #region Failure Classification
 

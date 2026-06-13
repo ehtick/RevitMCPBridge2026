@@ -711,16 +711,21 @@ namespace RevitMCPBridge
 
         private LibraryProfile CreateDefaultProfile()
         {
+            // Default library locations come from bridge_config.json (paths.libraryProfilePaths);
+            // unset keys stay empty until the user points them at a library.
+            var configured = BridgeConfig.LibraryProfilePaths;
+            string PathFor(string key) => configured.TryGetValue(key, out var p) ? p : "";
+
             var profile = new LibraryProfile
             {
                 Name = "Default",
                 Description = "Default library profile",
                 Paths = new Dictionary<string, string>
                 {
-                    { "Details", @"D:\Revit Detail Libraries\Revit Details\" },
-                    { "Families", @"D:\Revit Detail Libraries\Master Library\Families\" },
-                    { "Legends", @"D:\Revit Detail Libraries\Master Library\Legends\" },
-                    { "Schedules", @"D:\Revit Detail Libraries\Master Library\Schedules\" }
+                    { "Details", PathFor("Details") },
+                    { "Families", PathFor("Families") },
+                    { "Legends", PathFor("Legends") },
+                    { "Schedules", PathFor("Schedules") }
                 }
             };
             Profiles.Add(profile);

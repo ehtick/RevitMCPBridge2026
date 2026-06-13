@@ -155,15 +155,15 @@ namespace RevitMCPBridge
                 if (Directory.Exists(userTemplates))
                     searchPaths.Add(userTemplates);
 
-                // Common project templates location
-                var commonTemplates = @"D:\Revit Templates";
-                if (Directory.Exists(commonTemplates))
-                    searchPaths.Add(commonTemplates);
-
-                // Firm-specific templates
-                var firmTemplates = @"D:\Revit Templates\Firm Templates";
-                if (Directory.Exists(firmTemplates))
-                    searchPaths.Add(firmTemplates);
+                // Firm/machine-specific template locations from bridge_config.json
+                foreach (var configuredPath in BridgeConfig.TemplateSearchPaths)
+                {
+                    if (Directory.Exists(configuredPath))
+                        searchPaths.Add(configuredPath);
+                }
+                var configuredFirmTemplates = BridgeConfig.FirmTemplatesDirectory;
+                if (!string.IsNullOrEmpty(configuredFirmTemplates) && Directory.Exists(configuredFirmTemplates))
+                    searchPaths.Add(configuredFirmTemplates);
 
                 foreach (var path in searchPaths.Distinct())
                 {
@@ -435,8 +435,16 @@ namespace RevitMCPBridge
                 }
                 else
                 {
-                    // Create path in firm templates folder
-                    var firmTemplatesFolder = @"D:\Revit Templates\Firm Templates";
+                    // Create path in the configured firm templates folder
+                    var firmTemplatesFolder = BridgeConfig.FirmTemplatesDirectory;
+                    if (string.IsNullOrEmpty(firmTemplatesFolder))
+                    {
+                        return JsonConvert.SerializeObject(new
+                        {
+                            success = false,
+                            error = "No firm templates folder configured — pass templatePath or set paths.firmTemplatesDirectory in bridge_config.json"
+                        });
+                    }
                     if (!string.IsNullOrEmpty(firmName))
                     {
                         firmTemplatesFolder = Path.Combine(firmTemplatesFolder, firmName);

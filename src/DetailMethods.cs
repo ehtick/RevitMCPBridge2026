@@ -5993,10 +5993,10 @@ namespace RevitMCPBridge2026
                 // Normalize path
                 scriptPath = System.IO.Path.GetFullPath(scriptPath);
 
-                // Also check in the project directory
-                if (!System.IO.File.Exists(scriptPath))
+                // Also check the configured scripts directory (bridge_config.json paths.scriptsDirectory)
+                if (!System.IO.File.Exists(scriptPath) && !string.IsNullOrEmpty(BridgeConfig.ScriptsDirectory))
                 {
-                    scriptPath = @"D:\RevitMCPBridge2026\scripts\load_autodesk_family.py";
+                    scriptPath = System.IO.Path.Combine(BridgeConfig.ScriptsDirectory, "load_autodesk_family.py");
                 }
 
                 if (!System.IO.File.Exists(scriptPath))
@@ -6166,8 +6166,16 @@ namespace RevitMCPBridge2026
         {
             try
             {
-                string libraryPath = parameters["libraryPath"]?.ToString()
-                    ?? @"D:\Revit Detail Libraries\Revit Details\";
+                string libraryPath = parameters["libraryPath"]?.ToString();
+                if (string.IsNullOrEmpty(libraryPath)) libraryPath = BridgeConfig.DetailLibraryDirectory;
+                if (string.IsNullOrEmpty(libraryPath))
+                {
+                    return Newtonsoft.Json.JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No detail library configured — pass libraryPath or set paths.detailLibraryDirectory in bridge_config.json"
+                    });
+                }
 
                 if (!System.IO.Directory.Exists(libraryPath))
                 {
@@ -6564,8 +6572,16 @@ namespace RevitMCPBridge2026
             try
             {
                 string searchTerm = parameters["searchTerm"]?.ToString();
-                string libraryPath = parameters["libraryPath"]?.ToString()
-                    ?? @"D:\Revit Detail Libraries\Revit Details\";
+                string libraryPath = parameters["libraryPath"]?.ToString();
+                if (string.IsNullOrEmpty(libraryPath)) libraryPath = BridgeConfig.DetailLibraryDirectory;
+                if (string.IsNullOrEmpty(libraryPath))
+                {
+                    return Newtonsoft.Json.JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No detail library configured — pass libraryPath or set paths.detailLibraryDirectory in bridge_config.json"
+                    });
+                }
 
                 if (string.IsNullOrEmpty(searchTerm))
                 {

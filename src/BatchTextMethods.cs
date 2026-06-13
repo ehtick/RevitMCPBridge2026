@@ -16,7 +16,7 @@ namespace RevitMCPBridge2026
     /// </summary>
     public static class BatchTextMethods
     {
-        private static string _logPath = @"D:\RevitMCPBridge2026\logs\batch_text.log";
+        private static string _logPath => Path.Combine(BridgeConfig.LogDirectory, "batch_text.log");
 
         #region Text Type Operations
 
@@ -609,8 +609,16 @@ namespace RevitMCPBridge2026
         {
             try
             {
-                string libraryPath = parameters["libraryPath"]?.ToString()
-                    ?? @"D:\Revit Detail Libraries\Revit Details";
+                string libraryPath = parameters["libraryPath"]?.ToString();
+                if (string.IsNullOrEmpty(libraryPath)) libraryPath = BridgeConfig.DetailLibraryDirectory;
+                if (string.IsNullOrEmpty(libraryPath))
+                {
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No detail library configured — pass libraryPath or set paths.detailLibraryDirectory in bridge_config.json"
+                    });
+                }
 
                 if (!Directory.Exists(libraryPath))
                 {
@@ -660,10 +668,18 @@ namespace RevitMCPBridge2026
         {
             try
             {
-                string libraryPath = parameters["libraryPath"]?.ToString()
-                    ?? @"D:\Revit Detail Libraries\Revit Details";
+                string libraryPath = parameters["libraryPath"]?.ToString();
+                if (string.IsNullOrEmpty(libraryPath)) libraryPath = BridgeConfig.DetailLibraryDirectory;
+                if (string.IsNullOrEmpty(libraryPath))
+                {
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No detail library configured — pass libraryPath or set paths.detailLibraryDirectory in bridge_config.json"
+                    });
+                }
                 string progressFile = parameters["progressFile"]?.ToString()
-                    ?? @"D:\RevitMCPBridge2026\logs\batch_progress.json";
+                    ?? Path.Combine(BridgeConfig.LogDirectory, "batch_progress.json");
 
                 // Get all files, excluding Revit backup files (*.0001.rvt, *.0002.rvt, etc.)
                 var backupPattern = new System.Text.RegularExpressions.Regex(@"\.\d{4}\.rvt$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
@@ -729,7 +745,7 @@ namespace RevitMCPBridge2026
             {
                 string filePath = parameters["filePath"]?.ToString();
                 string progressFile = parameters["progressFile"]?.ToString()
-                    ?? @"D:\RevitMCPBridge2026\logs\batch_progress.json";
+                    ?? Path.Combine(BridgeConfig.LogDirectory, "batch_progress.json");
                 bool success = parameters["success"]?.ToObject<bool>() ?? true;
                 string errorMessage = parameters["errorMessage"]?.ToString();
 

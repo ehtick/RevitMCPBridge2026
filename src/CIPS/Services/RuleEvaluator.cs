@@ -26,8 +26,10 @@ namespace RevitMCPBridge.CIPS.Services
         private string _detectedFirm;
         private SmartSheetMatcher _sheetMatcher;
 
-        private static readonly string RulesFilePath =
-            @"D:\RevitMCPBridge2026\knowledge\extracted-projects\executable-rules.json";
+        // Rules file lives in the configured knowledge directory (bridge_config.json paths.knowledgeDirectory)
+        private static string RulesFilePath =>
+            System.IO.Path.Combine(RevitMCPBridge.BridgeConfig.KnowledgeDirectory,
+                "extracted-projects", "executable-rules.json");
 
         public static RuleEvaluator Instance
         {

@@ -69,30 +69,24 @@ namespace RevitMCPBridge
         #region Initialization
 
         /// <summary>
-        /// Get the profile folder path by looking for CLAUDE.md and going from there
+        /// Get the profile folder path inside the configured knowledge directory
+        /// (bridge_config.json paths.knowledgeDirectory; defaults to a "knowledge"
+        /// folder next to the DLL, else %APPDATA%\RevitMCPBridge\knowledge).
         /// </summary>
         private static string GetProfileFolderPath()
         {
-            // Try multiple possible locations
-            var possiblePaths = new[]
-            {
-                @"D:\RevitMCPBridge2026\knowledge\standards\firm-profiles",
-                @"C:\RevitMCPBridge2026\knowledge\standards\firm-profiles",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    @"RevitMCPBridge2026\knowledge\standards\firm-profiles")
-            };
+            var path = Path.Combine(BridgeConfig.KnowledgeDirectory, "standards", "firm-profiles");
 
-            foreach (var path in possiblePaths)
+            if (Directory.Exists(path))
             {
-                if (Directory.Exists(path))
-                {
-                    Log.Information($"[FirmProfile] Found profile folder at: {path}");
-                    return path;
-                }
+                Log.Information($"[FirmProfile] Found profile folder at: {path}");
             }
-
-            Log.Warning("[FirmProfile] Profile folder not found, using default path");
-            return possiblePaths[0]; // Default to D: drive
+            else
+            {
+                Log.Warning($"[FirmProfile] Profile folder not found at {path} — " +
+                            "set paths.knowledgeDirectory in bridge_config.json if your knowledge base lives elsewhere");
+            }
+            return path;
         }
 
         /// <summary>
@@ -285,7 +279,7 @@ namespace RevitMCPBridge
                     else
                     {
                         // Fall back to default
-                        _currentProfileId = _profileIndex?["defaultProfile"]?.ToString() ?? "arky";
+                        _currentProfileId = _profileIndex?["defaultProfile"]?.ToString() ?? BridgeConfig.DefaultFirmProfileId;
                     }
                 }
 
@@ -775,7 +769,7 @@ namespace RevitMCPBridge
                 }
 
                 // No match found - use default
-                var defaultProfile = _profileIndex?["defaultProfile"]?.ToString() ?? "arky";
+                var defaultProfile = _profileIndex?["defaultProfile"]?.ToString() ?? BridgeConfig.DefaultFirmProfileId;
                 if (_profileCache.ContainsKey(defaultProfile))
                 {
                     result.success = true;
@@ -807,7 +801,7 @@ namespace RevitMCPBridge
 
             if (string.IsNullOrEmpty(_currentProfileId) || !_profileCache.ContainsKey(_currentProfileId))
             {
-                _currentProfileId = _profileIndex?["defaultProfile"]?.ToString() ?? "arky";
+                _currentProfileId = _profileIndex?["defaultProfile"]?.ToString() ?? BridgeConfig.DefaultFirmProfileId;
             }
 
             var profile = _profileCache.ContainsKey(_currentProfileId) ? _profileCache[_currentProfileId] : null;
@@ -839,7 +833,7 @@ namespace RevitMCPBridge
         public static string GetCurrentProfileId()
         {
             EnsureProfilesLoaded();
-            return _currentProfileId ?? _profileIndex?["defaultProfile"]?.ToString() ?? "arky";
+            return _currentProfileId ?? _profileIndex?["defaultProfile"]?.ToString() ?? BridgeConfig.DefaultFirmProfileId;
         }
 
         /// <summary>

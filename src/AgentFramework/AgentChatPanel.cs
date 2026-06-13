@@ -828,8 +828,8 @@ namespace RevitMCPBridge2026.AgentFramework
             dialog.ShowDialog();
         }
 
-        // Knowledge base directory - embedded intelligence
-        private static readonly string KnowledgeDir = @"D:\RevitMCPBridge2026\knowledge";
+        // Knowledge base directory - configured in bridge_config.json (paths.knowledgeDirectory)
+        private static string KnowledgeDir => RevitMCPBridge.BridgeConfig.KnowledgeDirectory;
 
         // Core files to always load (small, essential for every session)
         private static readonly string[] CoreKnowledgeFiles = new[]

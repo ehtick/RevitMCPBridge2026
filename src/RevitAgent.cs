@@ -104,7 +104,10 @@ namespace RevitMCPBridge
                 var arr = JArray.Parse(System.IO.File.ReadAllText(MemoryPath));
                 if (arr.Count == 0) return "";
                 var sb = new StringBuilder();
-                sb.AppendLine("BIM OPS STUDIO STANDARDS & LEARNED PREFERENCES (the user is Weber Gouin; ALWAYS follow these — they OVERRIDE generic Revit defaults):");
+                // User identity comes from bridge_config.json (user.name) — never hardcoded
+                var userName = BridgeConfig.UserName;
+                var userClause = string.IsNullOrWhiteSpace(userName) ? "" : $"the user is {userName}; ";
+                sb.AppendLine($"FIRM STANDARDS & LEARNED PREFERENCES ({userClause}ALWAYS follow these — they OVERRIDE generic Revit defaults):");
                 foreach (var n in arr) { var t = (n is JObject o ? o["note"]?.ToString() : n.ToString()); if (!string.IsNullOrWhiteSpace(t)) sb.AppendLine("- " + t); }
                 sb.AppendLine();
                 return sb.ToString();
@@ -1794,7 +1797,12 @@ namespace RevitMCPBridge
                 if (string.IsNullOrWhiteSpace(query)) return "Provide a filename keyword to search for.";
                 string root = path;
                 if (string.IsNullOrWhiteSpace(root) || !System.IO.Directory.Exists(root))
-                    root = System.IO.Directory.Exists("D:\\BD-Architect-Files") ? "D:\\BD-Architect-Files" : "D:\\";
+                {
+                    // Default search roots come from bridge_config.json (paths.fileSearchRoots)
+                    root = BridgeConfig.FileSearchRoots.FirstOrDefault(r => System.IO.Directory.Exists(r));
+                    if (root == null)
+                        return "No search folder available — pass a path, or set paths.fileSearchRoots in bridge_config.json.";
+                }
                 if (!System.IO.Directory.Exists(root)) return "Folder not found: " + root;
                 var opts = new System.IO.EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 4, IgnoreInaccessible = true };
                 var hits = new List<string>();
@@ -1830,7 +1838,10 @@ namespace RevitMCPBridge
                 if (string.IsNullOrWhiteSpace(term)) return "Tell me what family to find (e.g. 'chair', 'single door', 'toilet').";
                 var words = term.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 string key = words.Length > 0 ? words[words.Length - 1] : term.ToLowerInvariant();   // the object noun
-                var roots = new List<string> { "D:\\003 - RESOURCES\\_FAMILY_CLOUD", "D:\\BD-Architect-Files", "C:\\ProgramData\\Autodesk\\RVT 2025\\Libraries", "D:\\" };
+                // Family search roots come from bridge_config.json (families.familySearchPaths)
+                var roots = new List<string>(BridgeConfig.FamilySearchPaths);
+                if (roots.Count == 0)
+                    return "No family search paths configured — set families.familySearchPaths in bridge_config.json, or use search_files / download_family with an explicit path.";
                 var opts = new System.IO.EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 5, IgnoreInaccessible = true };
                 string found = null; int examined = 0;
                 foreach (var root in roots)
@@ -1844,7 +1855,7 @@ namespace RevitMCPBridge
                     }
                     if (found != null) break;
                 }
-                if (found == null) return "No family matching '" + term + "' found on disk (searched D:\\ and the Revit library). Try a simpler term, use search_files for the exact name, or download_family with a URL.";
+                if (found == null) return "No family matching '" + term + "' found on disk (searched the configured family library paths). Try a simpler term, use search_files for the exact name, or download_family with a URL.";
                 var loaded = RunMethod("loadFamily", new JObject { ["familyPath"] = found }.ToString(Formatting.None));
                 return "Found and loaded: " + System.IO.Path.GetFileName(found) + "\n(from " + System.IO.Path.GetDirectoryName(found) + ")\n" + loaded;
             }

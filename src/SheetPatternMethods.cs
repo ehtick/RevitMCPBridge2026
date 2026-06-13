@@ -23,156 +23,38 @@ namespace RevitMCPBridge
         #region Pattern Database
 
         /// <summary>
-        /// Firm-to-pattern mappings from construction document analysis.
-        /// Updated with extracted patterns from 4 real projects (Jan 2026).
+        /// Firm-to-pattern mappings. Firm names are personal/client data and therefore
+        /// NEVER ship in source — they are loaded from bridge_config.json
+        /// (sheetPatterns.firmPrefixes: { "Firm Name": "patternId", ... }).
         /// </summary>
-        private static readonly Dictionary<string, string> FirmPatterns = new Dictionary<string, string>
-        {
-            // Extracted from 512 CLEMATIS - titleblock: TITLEBLOCK_SOP_36x24_2018
-            {"SOP", "SOP"},
-            {"Strang", "SOP"},
-
-            // Extracted from GOULDS TOWER-1 - folder structure ARKY
-            {"ARKY", "ARKY"},
-
-            // Extracted from BETHESDA HOSPITAL - titleblock: 24 x 36 Border- BD
-            {"BD", "BD"},
-            {"BD Architect", "BD"},
-            {"Bruce Davis", "BD"},
-
-            // Extracted from SOUTH GOLF COVE - Fantal Consulting
-            {"Fantal Consulting", "Fantal"},
-            {"Fantal", "Fantal"},
-            {"Jarvis Wyandon", "Fantal"},
-
-            // Legacy patterns for backward compatibility
-            {"Hugh Anglin", "A"},
-            {"Hugh L. Anglin", "A"},
-            {"Raymond Hall", "A"},
-            {"Raymond E. Hall", "A"},
-            {"Hepner Architects", "A"},
-            {"Hepner", "A"},
-            {"Vines Architecture", "C-Institutional"},
-            {"Vines", "C-Institutional"}
-        };
+        private static Dictionary<string, string> FirmPatterns => BridgeConfig.FirmSheetPrefixes;
 
         /// <summary>
-        /// New firm pattern rules extracted from real project analysis (Jan 2026).
-        /// These use actual sheet numbering from extracted projects.
+        /// Firm pattern rules extracted from real project analysis. These describe
+        /// client projects, so they are loaded from bridge_config.json
+        /// (sheetPatterns.extractedPatterns: { "patternId": { ...pattern spec... } })
+        /// and never ship in source. Cached per config load.
         /// </summary>
-        private static readonly Dictionary<string, JObject> ExtractedFirmPatterns = new Dictionary<string, JObject>
+        private static Dictionary<string, JObject> ExtractedFirmPatterns
         {
-            {"SOP", JObject.Parse(@"{
-                ""name"": ""SOP - Dot-Category Pattern"",
-                ""format"": ""{discipline}{category}.{subcategory}.{sequence}"",
-                ""separator"": ""."",
-                ""example"": ""A1.1.1"",
-                ""description"": ""Discipline.Category.Sheet format. Used by SOP for multi-family projects."",
-                ""extractedFrom"": ""512 CLEMATIS (370 sheets, 5-story multi-family)"",
-                ""sheetCategories"": {
-                    ""cover"": ""A0.0.x"",
-                    ""sitePlan"": ""A1.0.x"",
-                    ""floorPlans"": ""A1.1.x"",
-                    ""rcpPlans"": ""A3.0.x"",
-                    ""elevations"": ""A4.0.x"",
-                    ""wallSections"": ""A5.0.x"",
-                    ""buildingSections"": ""A4.0.x"",
-                    ""details"": ""A5.x.x"",
-                    ""unitPlans"": ""A9.{unit}.x"",
-                    ""lifeSafety"": ""ALS.{level}.x""
-                },
-                ""rules"": {
-                    ""UNIT_ENLARGED_PLANS"": ""A9.{unit}.{n}"",
-                    ""LIFE_SAFETY_PLANS"": ""ALS.{level}.1""
+            get
+            {
+                var map = new Dictionary<string, JObject>(StringComparer.OrdinalIgnoreCase);
+                foreach (var prop in BridgeConfig.ExtractedSheetPatterns.Properties())
+                {
+                    if (prop.Value is JObject obj) map[prop.Name] = obj;
                 }
-            }")},
-            {"ARKY", JObject.Parse(@"{
-                ""name"": ""ARKY - Hyphen-Decimal Pattern"",
-                ""format"": ""{discipline}-{category}.{sequence}"",
-                ""separator"": ""-"",
-                ""example"": ""A-2.1"",
-                ""description"": ""Discipline-Category.Sheet format. Used by ARKY for multi-family."",
-                ""extractedFrom"": ""GOULDS TOWER-1 (73 sheets, multi-family)"",
-                ""sheetCategories"": {
-                    ""cover"": ""A-0.x"",
-                    ""floorPlans"": ""A-2.x"",
-                    ""rcpPlans"": ""A-3.x"",
-                    ""elevations"": ""A-4.x"",
-                    ""sections"": ""A-5.x"",
-                    ""details"": ""A-6.x"",
-                    ""unitPlans"": ""A-9.{unit}.x"",
-                    ""lifeSafety"": ""A-0.1{level}""
-                },
-                ""rules"": {
-                    ""UNIT_ENLARGED_PLANS"": ""A-9.{unit}.{n}"",
-                    ""LIFE_SAFETY_PLANS"": ""A-0.1{level}""
-                }
-            }")},
-            {"BD", JObject.Parse(@"{
-                ""name"": ""BD - Three-Digit No Separator"",
-                ""format"": ""{discipline}{category}{sequence}"",
-                ""separator"": """",
-                ""example"": ""A100"",
-                ""description"": ""DisciplineSheet format with no separator. Used by BD Architect for healthcare."",
-                ""extractedFrom"": ""BETHESDA HOSPITAL RN STATION (59 sheets, healthcare/renovation)"",
-                ""sheetCategories"": {
-                    ""cover"": ""A000"",
-                    ""floorPlans"": ""A10x"",
-                    ""rcpPlans"": ""A10x"",
-                    ""enlargedPlans"": ""A40x"",
-                    ""details"": ""A50x"",
-                    ""doors"": ""A60x"",
-                    ""ulDetails"": ""A70x"",
-                    ""lifeSafety"": ""LS{level}02"",
-                    ""icra"": ""MICRA"",
-                    ""electrical"": ""E{level}xx"",
-                    ""mechanical"": ""M{level}xx"",
-                    ""plumbing"": ""P{level}xx"",
-                    ""fireProtection"": ""FP{level}xx""
-                },
-                ""rules"": {
-                    ""LIFE_SAFETY_PLANS"": ""LS{level}02"",
-                    ""RENOVATION_DEMO_PLANS"": ""{discipline}D{level}0{n}"",
-                    ""RENOVATION_PHASING"": ""{discipline}{phase}{level}{n}""
-                },
-                ""healthcareSpecific"": {
-                    ""ICRA"": ""MICRA"",
-                    ""MEDICAL_GAS"": ""P{level}01"",
-                    ""UL_DETAILS"": ""A70x""
-                }
-            }")},
-            {"Fantal", JObject.Parse(@"{
-                ""name"": ""Fantal - Decimal Pattern"",
-                ""format"": ""{discipline}{category}.{sequence}"",
-                ""separator"": ""."",
-                ""example"": ""A2.1"",
-                ""description"": ""Discipline.Sheet format. Used by Fantal for single-family residential."",
-                ""extractedFrom"": ""SOUTH GOLF COVE RESIDENCE (23 sheets, single-family)"",
-                ""sheetCategories"": {
-                    ""cover"": ""A0.x"",
-                    ""floorPlans"": ""A2.x"",
-                    ""rcpPlans"": ""A3.x"",
-                    ""elevations"": ""A5.x"",
-                    ""sections"": ""A7.x"",
-                    ""wallSections"": ""A8.x"",
-                    ""details"": ""A9.x"",
-                    ""lifeSafety"": ""LS-{level}""
-                },
-                ""rules"": {
-                    ""FLOOR_PLAN_PER_LEVEL"": ""A2.{level}"",
-                    ""ELEVATION_GROUPING"": ""A5.{n}"",
-                    ""SECTION_ORGANIZATION"": {
-                        ""building"": ""A7.{n}"",
-                        ""wall"": ""A8.{n}""
-                    }
-                }
-            }")}
-        };
+                return map;
+            }
+        }
 
         /// <summary>
-        /// Complete pattern specifications with rules and examples
+        /// Complete pattern specifications with rules and examples.
+        /// These are GENERIC industry numbering patterns only — firm names and
+        /// licensed-professional attributions belong in bridge_config.json
+        /// (sheetPatterns.patternRuleOverrides), never in source.
         /// </summary>
-        private static readonly Dictionary<string, JObject> PatternRules = new Dictionary<string, JObject>
+        private static readonly Dictionary<string, JObject> BuiltInPatternRules = new Dictionary<string, JObject>
         {
             {"A", JObject.Parse(@"{
                 ""name"": ""Hyphen-Decimal (Traditional)"",
@@ -181,7 +63,7 @@ namespace RevitMCPBridge
                 ""multiFloorExample"": ""A-1.1, A-1.2, A-1.3, A-1.4"",
                 ""separator"": ""-"",
                 ""description"": ""Traditional residential pattern used in Florida. One sheet per floor with sequential decimals."",
-                ""firms"": [""Hugh L. Anglin PE"", ""Raymond E. Hall Arch"", ""Hepner Architects""],
+                ""firms"": [],
                 ""regions"": [""FL""],
                 ""projectTypes"": [""Residential"", ""Multi-family"", ""Interior upgrades""],
                 ""sheetCategories"": {
@@ -248,7 +130,7 @@ namespace RevitMCPBridge
                 ""bidAlternateExample"": ""A103A, A111A"",
                 ""dimensionedExample"": ""A101.1 (dimensioned floor plan)"",
                 ""description"": ""Institutional/public projects with general sheets, bid alternates, and dimensioned variants."",
-                ""firms"": [""Vines Architecture""],
+                ""firms"": [],
                 ""regions"": [""NC""],
                 ""projectTypes"": [""Institutional"", ""Public"", ""Libraries"", ""Government""],
                 ""sheetCategories"": {
@@ -266,14 +148,14 @@ namespace RevitMCPBridge
                 }
             }")},
             {"D", JObject.Parse(@"{
-                ""name"": ""Space-Decimal (Fantal Style)"",
+                ""name"": ""Space-Decimal"",
                 ""format"": ""{discipline} {category}.{sequence}"",
                 ""separator"": "" "",
                 ""adminStart"": 0,
                 ""multiFloorExample"": ""A2.1, A2.2, A2.3"",
                 ""uniqueFeatures"": [""Space separator"", ""Zero-based admin"", ""Separate wall sections category""],
                 ""description"": ""Unique pattern using space separator. Zero-based admin sheets with intentional category gaps."",
-                ""firms"": [""Fantal Consulting"", ""Jarvis M. Wyandon AR94338""],
+                ""firms"": [],
                 ""regions"": [""FL""],
                 ""projectTypes"": [""Single family residential""],
                 ""sheetCategories"": {
@@ -289,6 +171,39 @@ namespace RevitMCPBridge
                 ""notes"": [""Intentional gaps (A3 to A5, no A4)"", ""Space is critical identifier""]
             }")}
         };
+
+        /// <summary>
+        /// Pattern rules = the built-in generic patterns merged with per-pattern overrides
+        /// from bridge_config.json (sheetPatterns.patternRuleOverrides). An override with
+        /// the same pattern id replaces the built-in definition wholesale.
+        /// </summary>
+        private static Dictionary<string, JObject> PatternRules
+        {
+            get
+            {
+                var merged = new Dictionary<string, JObject>(BuiltInPatternRules);
+                foreach (var prop in BridgeConfig.SheetPatternRuleOverrides.Properties())
+                {
+                    if (prop.Value is JObject obj) merged[prop.Name] = obj;
+                }
+                return merged;
+            }
+        }
+
+        /// <summary>
+        /// Display name for a pattern id, whichever database defines it.
+        /// </summary>
+        private static string PatternDisplayName(string patternId)
+        {
+            if (!string.IsNullOrEmpty(patternId))
+            {
+                if (PatternRules.TryGetValue(patternId, out var rules))
+                    return rules["name"]?.ToString() ?? patternId;
+                if (ExtractedFirmPatterns.TryGetValue(patternId, out var extracted))
+                    return extracted["name"]?.ToString() ?? patternId;
+            }
+            return patternId ?? "";
+        }
 
         #endregion
 
@@ -543,7 +458,7 @@ namespace RevitMCPBridge
 
                     case "D":
                         // Pattern D: A2.1, A2.2, A2.3
-                        // Category 2 is for floor plans in Fantal style
+                        // Category 2 is for floor plans in the space-decimal style
                         for (int i = 1; i <= floorCount; i++)
                         {
                             sheetNumbers.Add($"A2.{i}");
@@ -1125,7 +1040,7 @@ namespace RevitMCPBridge
                     if (firmName.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         var patternId = kvp.Value;
-                        var patternName = PatternRules[patternId]["name"].ToString();
+                        var patternName = PatternDisplayName(patternId);
 
                         return JsonConvert.SerializeObject(new
                         {
@@ -1166,7 +1081,7 @@ namespace RevitMCPBridge
         ///   "success": true,
         ///   "firmCount": 11,
         ///   "firms": [
-        ///     {"name": "Hugh Anglin", "pattern": "A", "patternName": "Hyphen-Decimal"},
+        ///     {"name": "Smith Architecture", "pattern": "A", "patternName": "Hyphen-Decimal"},
         ///     ...
         ///   ]
         /// }
@@ -1180,7 +1095,7 @@ namespace RevitMCPBridge
 
                 foreach (var kvp in FirmPatterns)
                 {
-                    var patternName = PatternRules[kvp.Value]["name"].ToString();
+                    var patternName = PatternDisplayName(kvp.Value);
                     firms.Add(JObject.Parse($"{{\"name\": \"{kvp.Key}\", \"pattern\": \"{kvp.Value}\", \"patternName\": \"{patternName}\"}}"));
                 }
 

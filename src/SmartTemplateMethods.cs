@@ -1188,8 +1188,16 @@ namespace RevitMCPBridge
                 var sharedParamFilePath = parameters["sharedParameterFile"]?.ToString();
                 if (string.IsNullOrEmpty(sharedParamFilePath))
                 {
-                    // Default path
-                    sharedParamFilePath = @"D:\Revit Templates\Firm Templates\Fantal Consultant\SmartTemplate_SharedParameters.txt";
+                    // Default comes from bridge_config.json (paths.sharedParametersFile)
+                    sharedParamFilePath = BridgeConfig.SharedParametersFile;
+                }
+                if (string.IsNullOrEmpty(sharedParamFilePath))
+                {
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No shared parameters file configured — pass sharedParameterFile or set paths.sharedParametersFile in bridge_config.json"
+                    });
                 }
 
                 // Check if file exists

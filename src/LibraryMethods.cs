@@ -15,8 +15,9 @@ namespace RevitMCPBridge
     /// </summary>
     public static class LibraryMethods
     {
-        // Default library path - can be overridden via parameters
-        private static readonly string DefaultLibraryPath = @"D:\Revit Detail Libraries";
+        // Default library path - configured in bridge_config.json (paths.libraryRootDirectory),
+        // can be overridden per call via the libraryPath parameter
+        private static string DefaultLibraryPath => BridgeConfig.LibraryRootDirectory;
         private static readonly string IndexFileName = "library_index.json";
 
         #region Search Methods

@@ -69,11 +69,8 @@ namespace RevitMCPBridge
 
         private static FamilySymbol LoadDefaultWindow(Document doc)
         {
-            var candidates = new List<string>
-            {
-                "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\windows\\Fixed-window.rfa",
-                "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\windows\\Fixed.rfa"
-            };
+            // Firm-standard window families come from bridge_config.json (families.defaultWindowFamilies)
+            var candidates = new List<string>(BridgeConfig.DefaultWindowFamilies);
             try
             {
                 string lib = "C:\\ProgramData\\Autodesk\\RVT 2025\\Libraries";

@@ -24,12 +24,13 @@ namespace RevitMCPBridge.Services
         private Document _lastDoc;
 
         /// <summary>
-        /// Known firm patterns from extracted project analysis
+        /// Known extracted firm pattern ids — loaded from bridge_config.json
+        /// (sheetPatterns.extractedPatterns); firm-specific data never ships in source.
         /// </summary>
-        private static readonly HashSet<string> KnownFirmPatterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "SOP", "ARKY", "BD", "Fantal"
-        };
+        private static HashSet<string> KnownFirmPatterns =>
+            new HashSet<string>(
+                RevitMCPBridge.BridgeConfig.ExtractedSheetPatterns.Properties().Select(p => p.Name),
+                StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Initialize the matcher for a specific document
@@ -166,38 +167,38 @@ namespace RevitMCPBridge.Services
             {
                 switch (_detectedPattern)
                 {
-                    // New extracted firm patterns
-                    case "SOP":
-                        // SOP uses A1.1.x for general, schedules typically on cover or dedicated sheets
-                        var sopSheet = sheets.FirstOrDefault(s =>
+                    // Extracted firm patterns (neutral ids; firms map to these in bridge_config.json)
+                    case "DotCategory":
+                        // Dot-category style uses A1.1.x for general, schedules typically on cover or dedicated sheets
+                        var dotCategorySheet = sheets.FirstOrDefault(s =>
                             s.SheetNumber.Contains("0.5") ||
                             s.Name.ToLower().Contains("schedule") ||
                             s.Name.ToLower().Contains("door") && scheduleName.Contains("door"));
-                        if (sopSheet != null) return sopSheet;
+                        if (dotCategorySheet != null) return dotCategorySheet;
                         break;
 
-                    case "ARKY":
-                        // ARKY uses A-x.x format
-                        var arkySheet = sheets.FirstOrDefault(s =>
+                    case "HyphenDecimal":
+                        // Hyphen-decimal style uses A-x.x format
+                        var hyphenDecimalSheet = sheets.FirstOrDefault(s =>
                             s.SheetNumber.Contains("-0.5") ||
                             s.Name.ToLower().Contains("schedule"));
-                        if (arkySheet != null) return arkySheet;
+                        if (hyphenDecimalSheet != null) return hyphenDecimalSheet;
                         break;
 
-                    case "BD":
-                        // BD uses A6xx for doors (A601)
-                        var bdSheet = sheets.FirstOrDefault(s =>
+                    case "ThreeDigitCompact":
+                        // Three-digit compact style uses A6xx for doors (A601)
+                        var threeDigitSheet = sheets.FirstOrDefault(s =>
                             (s.SheetNumber.StartsWith("A6") && scheduleName.Contains("door")) ||
                             s.Name.ToLower().Contains("schedule"));
-                        if (bdSheet != null) return bdSheet;
+                        if (threeDigitSheet != null) return threeDigitSheet;
                         break;
 
-                    case "Fantal":
-                        // Fantal uses simple decimal (A0.x for admin)
-                        var fantalSheet = sheets.FirstOrDefault(s =>
+                    case "DisciplineDecimal":
+                        // Discipline-decimal style uses simple decimal (A0.x for admin)
+                        var disciplineDecimalSheet = sheets.FirstOrDefault(s =>
                             s.SheetNumber.Contains("0.") ||
                             s.Name.ToLower().Contains("schedule"));
-                        if (fantalSheet != null) return fantalSheet;
+                        if (disciplineDecimalSheet != null) return disciplineDecimalSheet;
                         break;
 
                     // Legacy patterns
@@ -434,8 +435,8 @@ namespace RevitMCPBridge.Services
 
         /// <summary>
         /// Extract firm name from titleblock FAMILY NAME.
-        /// Pattern 1: TITLEBLOCK_{FIRM}_{SIZE}_{VARIANT} (e.g., TITLEBLOCK_SOP_36x24_2018 -> "SOP")
-        /// Pattern 2: {SIZE} Border- {FIRM} (e.g., "24 x 36 Border- BD" -> "BD")
+        /// Pattern 1: TITLEBLOCK_{FIRM}_{SIZE}_{VARIANT} (e.g., TITLEBLOCK_ACME_36x24_2018 -> "ACME")
+        /// Pattern 2: {SIZE} Border- {FIRM} (e.g., "24 x 36 Border- ACME" -> "ACME")
         /// This is more reliable than project info parameters.
         /// </summary>
         private string GetFirmFromTitleblockFamilyName(Document doc)

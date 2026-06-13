@@ -41,7 +41,8 @@ namespace RevitMCPBridge
             if (sym != null) return sym;
             try
             {
-                foreach (var lib in new[] { "C:\\ProgramData\\Autodesk\\RVT 2025\\Libraries", "D:\\003 - RESOURCES\\_FAMILY_CLOUD" })
+                // Library roots come from bridge_config.json (families.familySearchPaths)
+                foreach (var lib in BridgeConfig.FamilySearchPaths)
                 {
                     if (!System.IO.Directory.Exists(lib)) continue;
                     var opts = new System.IO.EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 6, IgnoreInaccessible = true };

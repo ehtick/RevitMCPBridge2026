@@ -78,11 +78,8 @@ namespace RevitMCPBridge
 
         private static FamilySymbol LoadDefaultDoor(Document doc)
         {
-            var candidates = new List<string>
-            {
-                "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\doors\\DR-SINGLE.rfa",
-                "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\doors\\DR-DOUBLE.rfa"
-            };
+            // Firm-standard door families come from bridge_config.json (families.defaultDoorFamilies)
+            var candidates = new List<string>(BridgeConfig.DefaultDoorFamilies);
             try
             {
                 string lib = "C:\\ProgramData\\Autodesk\\RVT 2025\\Libraries";

@@ -1,0 +1,291 @@
+{
+  "_comment": "Live bridge_config.json for Weber Gouin / BIM Ops Studio. These were the compiled-in defaults before the config layer; deploy this file next to RevitMCPBridge2026.dll (or to %APPDATA%\\RevitMCPBridge\\) to keep this machine's behavior identical. See CONFIG.md for every key.",
+  "user": {
+    "name": "Weber Gouin"
+  },
+  "paths": {
+    "logDirectory": "D:\\RevitMCPBridge2026\\logs",
+    "capabilitySystemDirectory": "D:\\RevitMCPBridge2026\\capability_system",
+    "knowledgeDirectory": "D:\\RevitMCPBridge2026\\knowledge",
+    "workflowsDirectory": "D:\\RevitMCPBridge2026\\Workflows",
+    "scriptsDirectory": "D:\\RevitMCPBridge2026\\scripts",
+    "templateSearchPaths": [
+      "D:\\Revit Templates"
+    ],
+    "firmTemplatesDirectory": "D:\\Revit Templates\\Firm Templates",
+    "sharedParametersFile": "D:\\Revit Templates\\Firm Templates\\Fantal Consultant\\SmartTemplate_SharedParameters.txt",
+    "libraryRootDirectory": "D:\\Revit Detail Libraries",
+    "detailLibraryDirectory": "D:\\Revit Detail Libraries\\Revit Details",
+    "detailLibrarySearchPaths": [
+      "D:\\BDArchitect-DetailLibrary-2025",
+      "D:\\003 - RESOURCES\\01 - REVIT LIBRARY\\REVIT STANDARD DETAILS LIBRARY",
+      "D:\\003 - RESOURCES\\01 - REVIT LIBRARY\\Revit Details",
+      "D:\\Revit Detail Libraries\\Revit Details"
+    ],
+    "libraryProfilePaths": {
+      "Details": "D:\\Revit Detail Libraries\\Revit Details\\",
+      "Families": "D:\\Revit Detail Libraries\\Master Library\\Families\\",
+      "Legends": "D:\\Revit Detail Libraries\\Master Library\\Legends\\",
+      "Schedules": "D:\\Revit Detail Libraries\\Master Library\\Schedules\\"
+    },
+    "fileSearchRoots": [
+      "D:\\BD-Architect-Files",
+      "D:\\"
+    ]
+  },
+  "families": {
+    "defaultDoorFamilies": [
+      "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\doors\\DR-SINGLE.rfa",
+      "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\doors\\DR-DOUBLE.rfa"
+    ],
+    "defaultWindowFamilies": [
+      "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\windows\\Fixed-window.rfa",
+      "D:\\003 - RESOURCES\\_FAMILY_CLOUD\\windows\\Fixed.rfa"
+    ],
+    "familySearchPaths": [
+      "D:\\003 - RESOURCES\\_FAMILY_CLOUD",
+      "D:\\BD-Architect-Files",
+      "C:\\ProgramData\\Autodesk\\RVT 2025\\Libraries",
+      "D:\\"
+    ]
+  },
+  "firmProfiles": {
+    "defaultProfileId": "arky"
+  },
+  "sheetPatterns": {
+    "firmPrefixes": {
+      "SOP": "DotCategory",
+      "Strang": "DotCategory",
+      "ARKY": "HyphenDecimal",
+      "BD": "ThreeDigitCompact",
+      "BD Architect": "ThreeDigitCompact",
+      "Bruce Davis": "ThreeDigitCompact",
+      "Fantal Consulting": "DisciplineDecimal",
+      "Fantal": "DisciplineDecimal",
+      "Jarvis Wyandon": "DisciplineDecimal",
+      "Hugh Anglin": "A",
+      "Hugh L. Anglin": "A",
+      "Raymond Hall": "A",
+      "Raymond E. Hall": "A",
+      "Hepner Architects": "A",
+      "Hepner": "A",
+      "Vines Architecture": "C-Institutional",
+      "Vines": "C-Institutional"
+    },
+    "extractedPatterns": {
+      "DotCategory": {
+        "name": "SOP - Dot-Category Pattern",
+        "format": "{discipline}{category}.{subcategory}.{sequence}",
+        "separator": ".",
+        "example": "A1.1.1",
+        "description": "Discipline.Category.Sheet format. Used by SOP for multi-family projects.",
+        "extractedFrom": "512 CLEMATIS (370 sheets, 5-story multi-family)",
+        "sheetCategories": {
+          "cover": "A0.0.x",
+          "sitePlan": "A1.0.x",
+          "floorPlans": "A1.1.x",
+          "rcpPlans": "A3.0.x",
+          "elevations": "A4.0.x",
+          "wallSections": "A5.0.x",
+          "buildingSections": "A4.0.x",
+          "details": "A5.x.x",
+          "unitPlans": "A9.{unit}.x",
+          "lifeSafety": "ALS.{level}.x"
+        },
+        "rules": {
+          "UNIT_ENLARGED_PLANS": "A9.{unit}.{n}",
+          "LIFE_SAFETY_PLANS": "ALS.{level}.1"
+        }
+      },
+      "HyphenDecimal": {
+        "name": "ARKY - Hyphen-Decimal Pattern",
+        "format": "{discipline}-{category}.{sequence}",
+        "separator": "-",
+        "example": "A-2.1",
+        "description": "Discipline-Category.Sheet format. Used by ARKY for multi-family.",
+        "extractedFrom": "GOULDS TOWER-1 (73 sheets, multi-family)",
+        "sheetCategories": {
+          "cover": "A-0.x",
+          "floorPlans": "A-2.x",
+          "rcpPlans": "A-3.x",
+          "elevations": "A-4.x",
+          "sections": "A-5.x",
+          "details": "A-6.x",
+          "unitPlans": "A-9.{unit}.x",
+          "lifeSafety": "A-0.1{level}"
+        },
+        "rules": {
+          "UNIT_ENLARGED_PLANS": "A-9.{unit}.{n}",
+          "LIFE_SAFETY_PLANS": "A-0.1{level}"
+        }
+      },
+      "ThreeDigitCompact": {
+        "name": "BD - Three-Digit No Separator",
+        "format": "{discipline}{category}{sequence}",
+        "separator": "",
+        "example": "A100",
+        "description": "DisciplineSheet format with no separator. Used by BD Architect for healthcare.",
+        "extractedFrom": "BETHESDA HOSPITAL RN STATION (59 sheets, healthcare/renovation)",
+        "sheetCategories": {
+          "cover": "A000",
+          "floorPlans": "A10x",
+          "rcpPlans": "A10x",
+          "enlargedPlans": "A40x",
+          "details": "A50x",
+          "doors": "A60x",
+          "ulDetails": "A70x",
+          "lifeSafety": "LS{level}02",
+          "icra": "MICRA",
+          "electrical": "E{level}xx",
+          "mechanical": "M{level}xx",
+          "plumbing": "P{level}xx",
+          "fireProtection": "FP{level}xx"
+        },
+        "rules": {
+          "LIFE_SAFETY_PLANS": "LS{level}02",
+          "RENOVATION_DEMO_PLANS": "{discipline}D{level}0{n}",
+          "RENOVATION_PHASING": "{discipline}{phase}{level}{n}"
+        },
+        "healthcareSpecific": {
+          "ICRA": "MICRA",
+          "MEDICAL_GAS": "P{level}01",
+          "UL_DETAILS": "A70x"
+        }
+      },
+      "DisciplineDecimal": {
+        "name": "Fantal - Decimal Pattern",
+        "format": "{discipline}{category}.{sequence}",
+        "separator": ".",
+        "example": "A2.1",
+        "description": "Discipline.Sheet format. Used by Fantal for single-family residential.",
+        "extractedFrom": "SOUTH GOLF COVE RESIDENCE (23 sheets, single-family)",
+        "sheetCategories": {
+          "cover": "A0.x",
+          "floorPlans": "A2.x",
+          "rcpPlans": "A3.x",
+          "elevations": "A5.x",
+          "sections": "A7.x",
+          "wallSections": "A8.x",
+          "details": "A9.x",
+          "lifeSafety": "LS-{level}"
+        },
+        "rules": {
+          "FLOOR_PLAN_PER_LEVEL": "A2.{level}",
+          "ELEVATION_GROUPING": "A5.{n}",
+          "SECTION_ORGANIZATION": {
+            "building": "A7.{n}",
+            "wall": "A8.{n}"
+          }
+        }
+      }
+    },
+    "patternRuleOverrides": {
+      "A": {
+        "name": "Hyphen-Decimal (Traditional)",
+        "format": "{prefix}-{category}.{sequence}",
+        "multiFloor": "sequential_decimal",
+        "multiFloorExample": "A-1.1, A-1.2, A-1.3, A-1.4",
+        "separator": "-",
+        "description": "Traditional residential pattern used in Florida. One sheet per floor with sequential decimals.",
+        "firms": [
+          "Hugh L. Anglin PE",
+          "Raymond E. Hall Arch",
+          "Hepner Architects"
+        ],
+        "regions": [
+          "FL"
+        ],
+        "projectTypes": [
+          "Residential",
+          "Multi-family",
+          "Interior upgrades"
+        ],
+        "sheetCategories": {
+          "cover": "G-00",
+          "sitePlan": "SP1",
+          "floorPlan": "A-1.x",
+          "elevations": "A-2.x",
+          "sections": "A-3.x",
+          "details": "A-5.x",
+          "structural": "S1, S2",
+          "mechanical": "M1, M2",
+          "electrical": "E1, E2",
+          "plumbing": "P1, P2"
+        }
+      },
+      "C-Institutional": {
+        "name": "Three-Digit Institutional (G-Prefix)",
+        "format": "{discipline}{hundreds}{sequence}",
+        "gPrefix": true,
+        "bidAlternates": true,
+        "dimensionedVariants": true,
+        "multiFloorExample": "A101, A102, A103",
+        "bidAlternateExample": "A103A, A111A",
+        "dimensionedExample": "A101.1 (dimensioned floor plan)",
+        "description": "Institutional/public projects with general sheets, bid alternates, and dimensioned variants.",
+        "firms": [
+          "Vines Architecture"
+        ],
+        "regions": [
+          "NC"
+        ],
+        "projectTypes": [
+          "Institutional",
+          "Public",
+          "Libraries",
+          "Government"
+        ],
+        "sheetCategories": {
+          "cover": "A000",
+          "general": "G001-G099",
+          "sitePlan": "A101",
+          "floorPlans": "A101-A103",
+          "dimensionedPlans": "A101.1, A102.1",
+          "rcpPlans": "A104-A106",
+          "elevations": "A107-A110",
+          "sections": "A111-A113",
+          "details": "A114+",
+          "bidAlternates": "A103A, A111A",
+          "fireProtection": "FP501-FP599"
+        }
+      },
+      "D": {
+        "name": "Space-Decimal (Fantal Style)",
+        "format": "{discipline} {category}.{sequence}",
+        "separator": " ",
+        "adminStart": 0,
+        "multiFloorExample": "A2.1, A2.2, A2.3",
+        "uniqueFeatures": [
+          "Space separator",
+          "Zero-based admin",
+          "Separate wall sections category"
+        ],
+        "description": "Unique pattern using space separator. Zero-based admin sheets with intentional category gaps.",
+        "firms": [
+          "Fantal Consulting",
+          "Jarvis M. Wyandon AR94338"
+        ],
+        "regions": [
+          "FL"
+        ],
+        "projectTypes": [
+          "Single family residential"
+        ],
+        "sheetCategories": {
+          "admin": "A 0.0, A 0.1",
+          "sitePlan": "A1.0",
+          "floorPlans": "A2.1, A2.2, A2.3",
+          "rcpPlans": "A3.0, A3.1",
+          "elevations": "A5.0, A5.1",
+          "sections": "A7.0, A7.1",
+          "wallSections": "A8.0, A8.1, A8.2",
+          "details": "A9.0, A9.1"
+        },
+        "notes": [
+          "Intentional gaps (A3 to A5, no A4)",
+          "Space is critical identifier"
+        ]
+      }
+    }
+  }
+}

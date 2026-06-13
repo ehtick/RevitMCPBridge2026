@@ -32,8 +32,8 @@ namespace RevitMCPBridge
             // Try multiple locations in order of preference
             var possiblePaths = new[]
             {
-                // 1. Project directory (for development and deployed scenarios)
-                @"D:\RevitMCPBridge2026\Workflows",
+                // 1. Configured directory (bridge_config.json paths.workflowsDirectory)
+                BridgeConfig.WorkflowsDirectory,
 
                 // 2. Relative to assembly location (for bin/Release during dev)
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "..", "..", "..", "Workflows"),
@@ -47,6 +47,7 @@ namespace RevitMCPBridge
 
             foreach (var path in possiblePaths)
             {
+                if (string.IsNullOrWhiteSpace(path)) continue;
                 try
                 {
                     var fullPath = Path.GetFullPath(path);
@@ -62,9 +63,10 @@ namespace RevitMCPBridge
                 }
             }
 
-            // Fall back to project directory even if it doesn't exist
-            var fallback = @"D:\RevitMCPBridge2026\Workflows";
-            Log.Warning($"[WORKFLOW] Templates directory not found, using fallback: {fallback}");
+            // Fall back to a Workflows folder next to the DLL even if it doesn't exist
+            var fallback = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Workflows");
+            Log.Warning($"[WORKFLOW] Templates directory not found, using fallback: {fallback} " +
+                        "(set paths.workflowsDirectory in bridge_config.json to override)");
             return fallback;
         }
 
