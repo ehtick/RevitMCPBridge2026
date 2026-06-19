@@ -756,21 +756,29 @@ namespace RevitMCPBridge
                         try
                         {
                             viewport = Viewport.Create(doc, sheetId, viewId, attemptPoint);
-                            if (viewport != null)
-                            {
-                                // Move to the intended position if we used a different point
-                                if (attemptPoint != point)
-                                {
-                                    try { viewport.SetBoxCenter(point); } catch { }
-                                }
-                                break;
-                            }
+                            if (viewport != null) break;
                         }
                         catch (Exception ex)
                         {
                             createException = ex;
                             viewport = null;
                         }
+                    }
+
+                    // BUGFIX (2026-06-19): Viewport.Create's point arg is NOT reliably
+                    // honored — for drafting views Revit snaps the new viewport box to a
+                    // default location, so the requested x/y was ignored whenever the first
+                    // Create attempt succeeded (SetBoxCenter only ran on fallback attempts).
+                    // Always set the box center explicitly to the requested point after
+                    // creation, then regenerate so the move sticks.
+                    if (viewport != null)
+                    {
+                        try
+                        {
+                            viewport.SetBoxCenter(point);
+                            doc.Regenerate();
+                        }
+                        catch { /* leave at Create() location if center can't be set */ }
                     }
 
                     if (viewport == null && createException != null)
@@ -812,13 +820,19 @@ namespace RevitMCPBridge
 
                     trans.CommitAndCheck();
 
+                    // Report the ACTUAL viewport box center, not just the requested point,
+                    // so callers can verify placement truthfully.
+                    double actualX = point.X, actualY = point.Y;
+                    try { var c = viewport.GetBoxCenter(); actualX = c.X; actualY = c.Y; } catch { }
+
                     return ResponseBuilder.Success()
                         .With("viewportId", (int)viewport.Id.Value)
                         .With("sheetId", (int)sheetId.Value)
                         .With("viewId", (int)viewId.Value)
                         .With("viewName", view.Name)
                         .With("sheetNumber", sheet.SheetNumber)
-                        .With("location", new[] { point.X, point.Y, 0.0 })
+                        .With("location", new[] { Math.Round(actualX, 4), Math.Round(actualY, 4), 0.0 })
+                        .With("requestedLocation", new[] { Math.Round(point.X, 4), Math.Round(point.Y, 4) })
                         .With("positionConstrained", wasConstrained)
                         .With("originalLocation", wasConstrained ? new[] { originalX, originalY } : null)
                         .With("printableArea", new
