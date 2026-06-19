@@ -249,6 +249,244 @@ namespace RevitMCPBridge
         }
 
         /// <summary>
+        /// Roof framing interpreter. Reads the roof's actual solid geometry and
+        /// classifies it into the lines a framer needs: ridges, hips, valleys,
+        /// eaves and rakes, plus every sloped top face with its slope and eave.
+        /// Geometry-driven (not footprint-driven) so hips, gables and intersecting
+        /// roofs with valleys all resolve through the same code.
+        /// Read-only — no transaction.
+        /// Parameters:
+        /// - roofId: ID of the roof element
+        /// </summary>
+        [MCPMethod("analyzeRoofFraming", Category = "Roof", Description = "Interpret a roof's solid geometry into framing lines: ridges, hips, valleys, eaves, rakes, and sloped top faces with slope/eave. Keystone for rafter/truss layout.")]
+        public static string AnalyzeRoofFraming(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+
+                if (parameters["roofId"] == null)
+                    return ResponseBuilder.Error("roofId is required", "MISSING_PARAM").Build();
+
+                var roofId = new ElementId(int.Parse(parameters["roofId"].ToString()));
+                var roof = doc.GetElement(roofId) as RoofBase;
+                if (roof == null)
+                    return ResponseBuilder.Error("Roof not found", "NOT_FOUND").Build();
+
+                const double NZ_EPS = 0.001;   // min vertical component for a "top" face
+                const double Z_TOL = 0.02;     // ft, horizontal-edge / fold tolerance
+                const double SAMPLE = 0.5;      // ft, inward sampling step for fold test
+
+                // ---- collect solids (handle nested geometry instances) ----
+                var opts = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
+                var ge = roof.get_Geometry(opts);
+                var solids = new List<Solid>();
+                CollectSolids(ge, solids);
+                if (solids.Count == 0)
+                    return ResponseBuilder.Error("No solid geometry on roof", "NO_GEOMETRY").Build();
+
+                // ---- first pass: gather sloped top faces ----
+                var topFaces = new List<PlanarFace>();
+                foreach (var solid in solids)
+                    foreach (Face f in solid.Faces)
+                        if (f is PlanarFace pf && pf.FaceNormal.Z > NZ_EPS)
+                            topFaces.Add(pf);
+
+                var faceOut = new List<object>();
+                for (int i = 0; i < topFaces.Count; i++)
+                {
+                    var pf = topFaces[i];
+                    var n = pf.FaceNormal;
+                    double slopeRad = Math.Acos(Math.Min(1.0, n.Z));
+                    double riseRun = n.Z > NZ_EPS ? Math.Sqrt(n.X * n.X + n.Y * n.Y) / n.Z : 0;
+                    var eave = LowestHorizontalEdge(pf, Z_TOL);
+                    var cen = FaceCentroid(pf);
+                    faceOut.Add(new
+                    {
+                        faceIndex = i,
+                        normal = new { x = n.X, y = n.Y, z = n.Z },
+                        slopeDegrees = slopeRad * 180.0 / Math.PI,
+                        slopeRiseRun = riseRun,
+                        slopeRisePer12 = riseRun * 12.0,
+                        area = pf.Area,
+                        centroid = new { x = cen.X, y = cen.Y, z = cen.Z },
+                        eaveLine = eave
+                    });
+                }
+
+                // ---- second pass: classify every edge ----
+                var ridges = new List<object>();
+                var hips = new List<object>();
+                var valleys = new List<object>();
+                var eaves = new List<object>();
+                var rakes = new List<object>();
+
+                foreach (var solid in solids)
+                {
+                    foreach (Edge e in solid.Edges)
+                    {
+                        var f0 = e.GetFace(0);
+                        var f1 = e.GetFace(1);
+                        bool t0 = f0 is PlanarFace p0 && p0.FaceNormal.Z > NZ_EPS;
+                        bool t1 = f1 is PlanarFace p1 && p1.FaceNormal.Z > NZ_EPS;
+
+                        var curve = e.AsCurve();
+                        var a = curve.GetEndPoint(0);
+                        var b = curve.GetEndPoint(1);
+                        double len = curve.Length;
+                        var mid = (a + b) * 0.5;
+                        var tan = (b - a);
+                        if (tan.IsZeroLength()) continue;
+                        tan = tan.Normalize();
+                        bool horizontal = Math.Abs(b.Z - a.Z) < Z_TOL;
+                        var seg = new
+                        {
+                            start = new { x = a.X, y = a.Y, z = a.Z },
+                            end = new { x = b.X, y = b.Y, z = b.Z },
+                            length = len
+                        };
+
+                        if (t0 && t1)
+                        {
+                            // interior crease between two sloped faces — fold test
+                            double z0 = SampleZInward((PlanarFace)f0, mid, tan, SAMPLE);
+                            double z1 = SampleZInward((PlanarFace)f1, mid, tan, SAMPLE);
+                            int ia = IndexOfFace(topFaces, f0);
+                            int ib = IndexOfFace(topFaces, f1);
+                            if (z0 < mid.Z - Z_TOL && z1 < mid.Z - Z_TOL)
+                            {
+                                // mountain fold
+                                if (horizontal)
+                                    ridges.Add(seg);
+                                else
+                                    hips.Add(new { seg.start, seg.end, seg.length, faceA = ia, faceB = ib });
+                            }
+                            else if (z0 > mid.Z + Z_TOL && z1 > mid.Z + Z_TOL)
+                            {
+                                valleys.Add(new { seg.start, seg.end, seg.length, faceA = ia, faceB = ib });
+                            }
+                            // else: coplanar / ambiguous seam — ignore
+                        }
+                        else if (t0 ^ t1)
+                        {
+                            // boundary: one top face + a side/bottom face
+                            int fi = IndexOfFace(topFaces, t0 ? f0 : f1);
+                            if (horizontal)
+                                eaves.Add(new { seg.start, seg.end, seg.length, faceIndex = fi });
+                            else
+                                rakes.Add(new { seg.start, seg.end, seg.length, faceIndex = fi });
+                        }
+                    }
+                }
+
+                return JsonConvert.SerializeObject(new
+                {
+                    success = true,
+                    roofId = (int)roof.Id.Value,
+                    topFaceCount = topFaces.Count,
+                    counts = new
+                    {
+                        ridges = ridges.Count,
+                        hips = hips.Count,
+                        valleys = valleys.Count,
+                        eaves = eaves.Count,
+                        rakes = rakes.Count
+                    },
+                    topFaces = faceOut,
+                    ridges = ridges,
+                    hips = hips,
+                    valleys = valleys,
+                    eaves = eaves,
+                    rakes = rakes
+                });
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        // ---- roof framing interpreter helpers ----
+
+        private static void CollectSolids(GeometryElement ge, List<Solid> solids)
+        {
+            if (ge == null) return;
+            foreach (GeometryObject go in ge)
+            {
+                if (go is Solid s && s.Faces.Size > 0 && s.Volume > 1e-6)
+                    solids.Add(s);
+                else if (go is GeometryInstance gi)
+                    CollectSolids(gi.GetInstanceGeometry(), solids);
+            }
+        }
+
+        private static XYZ FaceCentroid(Face f)
+        {
+            var mesh = f.Triangulate();
+            if (mesh == null || mesh.Vertices.Count == 0)
+                return XYZ.Zero;
+            var sum = XYZ.Zero;
+            foreach (var v in mesh.Vertices) sum += v;
+            return sum * (1.0 / mesh.Vertices.Count);
+        }
+
+        // Z of a point stepped a short distance off the edge, into the face plane.
+        // Used to tell a mountain fold (ridge/hip) from a valley fold.
+        private static double SampleZInward(PlanarFace pf, XYZ mid, XYZ edgeTan, double step)
+        {
+            var inPlane = pf.FaceNormal.CrossProduct(edgeTan);  // in face, perp to edge
+            if (inPlane.IsZeroLength()) return mid.Z;
+            inPlane = inPlane.Normalize();
+            var cen = FaceCentroid(pf);
+            if (inPlane.DotProduct(cen - mid) < 0) inPlane = inPlane.Negate();
+            return (mid + inPlane * step).Z;
+        }
+
+        private static int IndexOfFace(List<PlanarFace> faces, Face target)
+        {
+            for (int i = 0; i < faces.Count; i++)
+                if (ReferenceEquals(faces[i], target)) return i;
+            // fallback: match by centroid proximity (different managed instance)
+            if (target is PlanarFace tpf)
+            {
+                var tc = FaceCentroid(tpf);
+                for (int i = 0; i < faces.Count; i++)
+                    if (FaceCentroid(faces[i]).DistanceTo(tc) < 0.01) return i;
+            }
+            return -1;
+        }
+
+        private static object LowestHorizontalEdge(PlanarFace pf, double zTol)
+        {
+            Curve best = null;
+            double bestZ = double.MaxValue;
+            foreach (CurveLoop loop in pf.GetEdgesAsCurveLoops())
+            {
+                foreach (Curve c in loop)
+                {
+                    var s = c.GetEndPoint(0);
+                    var e = c.GetEndPoint(1);
+                    if (Math.Abs(s.Z - e.Z) >= zTol) continue;  // not horizontal
+                    double z = (s.Z + e.Z) * 0.5;
+                    if (z < bestZ)
+                    {
+                        bestZ = z;
+                        best = c;
+                    }
+                }
+            }
+            if (best == null) return null;
+            var a = best.GetEndPoint(0);
+            var b = best.GetEndPoint(1);
+            return new
+            {
+                start = new { x = a.X, y = a.Y, z = a.Z },
+                end = new { x = b.X, y = b.Y, z = b.Z },
+                length = best.Length
+            };
+        }
+
+        /// <summary>
         /// Get precise roof area including actual surface area with slopes.
         /// Parameters:
         /// - roofId: ID of the roof element
