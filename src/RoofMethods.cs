@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -398,6 +399,182 @@ namespace RevitMCPBridge
                     valleys = valleys,
                     eaves = eaves,
                     rakes = rakes
+                });
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
+        /// Lay common + jack rafters on every sloped face of a roof, at a spacing o.c.
+        /// Built on the same geometry analyzeRoofFraming reads: for each top face it marches
+        /// along the eave and shoots an up-slope ray, clipping it to the face boundary — a
+        /// station that reaches the ridge gives a common rafter, one that dies into a hip/valley
+        /// gives a jack, automatically. Members placed with DisallowJoinAtEnd (square-cut, stay
+        /// exactly on the line — the wood-truss technique).
+        /// Parameters:
+        /// - roofId: roof element id (required)
+        /// - spacing: rafter spacing o.c. in INCHES (default 24)
+        /// - framingTypeId: (optional) structural framing FamilySymbol id; default = first loaded
+        /// </summary>
+        [MCPMethod("layoutRoofRafters", Category = "Roof", Description = "Lay common+jack rafters on every sloped roof face at a spacing o.c. (built on analyzeRoofFraming geometry). Returns per-face rafter counts + member ids.")]
+        public static string LayoutRoofRafters(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+
+                if (parameters["roofId"] == null)
+                    return ResponseBuilder.Error("roofId is required", "MISSING_PARAM").Build();
+
+                var roofId = new ElementId(int.Parse(parameters["roofId"].ToString()));
+                var roof = doc.GetElement(roofId) as RoofBase;
+                if (roof == null)
+                    return ResponseBuilder.Error("Roof not found", "NOT_FOUND").Build();
+
+                double spacingIn = parameters["spacing"]?.ToObject<double>() ?? 24.0;
+                double spacing = spacingIn / 12.0;
+                if (spacing < 0.1) spacing = 2.0;
+
+                // framing symbol: explicit, else first loaded structural framing family
+                FamilySymbol sym = null;
+                if (parameters["framingTypeId"] != null)
+                    sym = doc.GetElement(new ElementId(parameters["framingTypeId"].ToObject<int>())) as FamilySymbol;
+                if (sym == null)
+                    sym = new FilteredElementCollector(doc)
+                        .OfCategory(BuiltInCategory.OST_StructuralFraming)
+                        .OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>().FirstOrDefault();
+                if (sym == null)
+                    return ResponseBuilder.Error("No structural framing family loaded — load a rafter/lumber family first (revit_load_autodesk_family).", "NO_FRAMING_TYPE").Build();
+
+                var level = doc.GetElement(roof.LevelId) as Level
+                            ?? new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().FirstOrDefault();
+
+                const double NZ_EPS = 0.001, Z_TOL = 0.02, EPS = 0.05, BIG = 1000.0;
+
+                var opts = new Options { ComputeReferences = true, DetailLevel = ViewDetailLevel.Fine };
+                var solids = new List<Solid>();
+                CollectSolids(roof.get_Geometry(opts), solids);
+                if (solids.Count == 0)
+                    return ResponseBuilder.Error("No solid geometry on roof", "NO_GEOMETRY").Build();
+
+                var topFaces = new List<PlanarFace>();
+                foreach (var solid in solids)
+                    foreach (Face f in solid.Faces)
+                        if (f is PlanarFace pf && pf.FaceNormal.Z > NZ_EPS)
+                            topFaces.Add(pf);
+
+                var faceResults = new List<object>();
+                var allMemberIds = new List<int>();
+                int total = 0;
+
+                using (var trans = new Transaction(doc, "Layout Roof Rafters"))
+                {
+                    trans.Start();
+                    var fo = trans.GetFailureHandlingOptions();
+                    fo.SetFailuresPreprocessor(new WarningSwallower());
+                    trans.SetFailureHandlingOptions(fo);
+                    if (!sym.IsActive) sym.Activate();
+
+                    for (int fi = 0; fi < topFaces.Count; fi++)
+                    {
+                        var pf = topFaces[fi];
+                        var n = pf.FaceNormal;
+
+                        // boundary line segments + lowest horizontal edge (the eave)
+                        var segs = new List<Line>();
+                        XYZ eaveA = null, eaveB = null;
+                        double eaveZ = double.MaxValue;
+                        foreach (CurveLoop loop in pf.GetEdgesAsCurveLoops())
+                            foreach (Curve c in loop)
+                            {
+                                if (c is Line ln) segs.Add(ln);
+                                var s = c.GetEndPoint(0); var e = c.GetEndPoint(1);
+                                if (Math.Abs(s.Z - e.Z) < Z_TOL)
+                                {
+                                    double z = (s.Z + e.Z) * 0.5;
+                                    if (z < eaveZ) { eaveZ = z; eaveA = s; eaveB = e; }
+                                }
+                            }
+                        if (eaveA == null)
+                        {
+                            faceResults.Add(new { faceIndex = fi, rafterCount = 0, note = "no horizontal eave" });
+                            continue;
+                        }
+
+                        var eaveVec = eaveB - eaveA;
+                        double eaveLen = eaveVec.GetLength();
+                        if (eaveLen < EPS) continue;
+                        var eaveDir = eaveVec.Normalize();
+
+                        // up-slope, in-plane, perpendicular to eave, oriented into the face (uphill)
+                        var vDir = n.CrossProduct(eaveDir);
+                        if (vDir.IsZeroLength()) continue;
+                        vDir = vDir.Normalize();
+                        var eaveMid = (eaveA + eaveB) * 0.5;
+                        if (vDir.DotProduct(FaceCentroid(pf) - eaveMid) < 0) vDir = vDir.Negate();
+
+                        int count = 0;
+                        double firstLen = 0, lastLen = 0;
+                        for (double sdist = spacing * 0.5; sdist < eaveLen - EPS; sdist += spacing)
+                        {
+                            var P = eaveA + eaveDir * sdist;
+                            var ray = Line.CreateBound(P, P + vDir * BIG);
+
+                            XYZ hit = null;
+                            double hitDist = double.MaxValue;
+                            foreach (var seg in segs)
+                            {
+                                IntersectionResultArray res = null;
+                                if (ray.Intersect(seg, out res) == SetComparisonResult.Overlap && res != null)
+                                    foreach (IntersectionResult ir in res)
+                                    {
+                                        double d = P.DistanceTo(ir.XYZPoint);
+                                        if (d > EPS && d < hitDist) { hitDist = d; hit = ir.XYZPoint; }
+                                    }
+                            }
+                            if (hit == null) continue;
+
+                            var inst = doc.Create.NewFamilyInstance(Line.CreateBound(P, hit), sym, level, StructuralType.Beam);
+                            try
+                            {
+                                StructuralFramingUtils.DisallowJoinAtEnd(inst, 0);
+                                StructuralFramingUtils.DisallowJoinAtEnd(inst, 1);
+                            }
+                            catch { }
+                            allMemberIds.Add((int)inst.Id.Value);
+                            if (count == 0) firstLen = hitDist;
+                            lastLen = hitDist;
+                            count++;
+                        }
+
+                        total += count;
+                        faceResults.Add(new
+                        {
+                            faceIndex = fi,
+                            rafterCount = count,
+                            eaveLength = eaveLen,
+                            firstRafterLength = firstLen,
+                            lastRafterLength = lastLen,
+                            slopeDegrees = Math.Acos(Math.Min(1.0, n.Z)) * 180.0 / Math.PI
+                        });
+                    }
+
+                    trans.Commit();
+                }
+
+                return JsonConvert.SerializeObject(new
+                {
+                    success = true,
+                    roofId = (int)roof.Id.Value,
+                    framingType = sym.Name,
+                    spacingInches = spacingIn,
+                    totalRafters = total,
+                    faceCount = topFaces.Count,
+                    faces = faceResults,
+                    memberIds = allMemberIds
                 });
             }
             catch (Exception ex)
