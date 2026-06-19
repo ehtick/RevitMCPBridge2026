@@ -352,6 +352,31 @@ namespace RevitMCPBridge
                 _eventQueue.TryDequeue(out _);
         }
 
+        /// <summary>Name of the phase the active view is set to (Existing/New/Demo).
+        /// Null if the view has no phase or it can't be resolved.</summary>
+        private static string GetActiveViewPhaseName(Document doc, Autodesk.Revit.DB.View view)
+        {
+            try
+            {
+                var p = view?.get_Parameter(BuiltInParameter.VIEW_PHASE);
+                if (p != null)
+                {
+                    var pid = p.AsElementId();
+                    if (pid != null && pid != ElementId.InvalidElementId)
+                        return doc.GetElement(pid)?.Name;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>Warning count, or -1 if it can't be read. Never throws.</summary>
+        private static int SafeWarningsCount(Document doc)
+        {
+            try { return doc.GetWarnings().Count; }
+            catch { return -1; }
+        }
+
         // ─── State File ─────────────────────────────────────────────────
 
         private static void WriteStateFile()
@@ -401,6 +426,14 @@ namespace RevitMCPBridge
                         ["count"] = selIds.Count,
                         ["elementIds"] = selIds.Select(id => (int)id.Value).Take(50).ToList()
                     };
+
+                    // Current phase — what the user is drawing in. On a renovation this is
+                    // everything (Existing vs New Construction vs Demo), so the eye must see it.
+                    state["currentPhase"] = GetActiveViewPhaseName(doc, view);
+
+                    // Warning count — model health at a glance.
+                    try { state["warningsCount"] = doc.GetWarnings().Count; }
+                    catch { state["warningsCount"] = -1; }
                 }
                 else
                 {
@@ -539,6 +572,8 @@ namespace RevitMCPBridge
                         id = view != null ? (int)view.Id.Value : -1,
                         scale = view?.Scale ?? 0
                     },
+                    currentPhase = GetActiveViewPhaseName(doc, view),
+                    warningsCount = SafeWarningsCount(doc),
                     selection = new
                     {
                         count = selIds.Count,

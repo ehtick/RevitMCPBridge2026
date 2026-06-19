@@ -1,0 +1,46 @@
+hwnd = 7083622
+Control Identifiers:
+
+Dialog - 'Load Autodesk Family'    (L-3810, T23, R-1560, B1793)
+['Dialog', 'Load Autodesk FamilyDialog', 'Load Autodesk Family']
+child_window(title="Load Autodesk Family", control_type="Window")
+   | 
+   | TitleBar - ''    (L-3799, T26, R-1571, B68)
+   | ['TitleBar']
+   |    | 
+   |    | Button - 'Close'    (L-1622, T24, R-1570, B68)
+   |    | ['Close', 'Button', 'CloseButton']
+   |    | child_window(title="Close", control_type="Button")
+   | 
+   | Custom - ''    (L-3799, T68, R-1571, B1782)
+   | ['Custom']
+   | child_window(auto_id="BrowserView", control_type="Custom")
+   |    | 
+   |    | Pane - ''    (L-3799, T68, R-1571, B1782)
+   |    | ['Pane', 'Pane0', 'Pane1']
+   |    |    | 
+   |    |    | Static - ''    (L-3799, T68, R-1571, B1782)
+   |    |    | ['Static']
+   |    |    |    | 
+   |    |    |    | Pane - 'ContentDelivery'    (L-3799, T68, R-1571, B1782)
+   |    |    |    | ['Pane2', 'ContentDeliveryPane', 'ContentDelivery']
+   |    |    |    | child_window(title="ContentDelivery", control_type="Pane")
+   |    |    |    |    | 
+   |    |    |    |    | Pane - ''    (L-3799, T68, R-1571, B1782)
+   |    |    |    |    | ['Pane3']
+   |    |    |    |    | 
+   |    |    |    |    | Pane - 'ContentDelivery - Web content'    (L-3800, T68, R-1571, B1783)
+   |    |    |    |    | ['Pane4', 'ContentDelivery - Web content', 'ContentDelivery - Web contentPane']
+   |    |    |    |    | child_window(title="ContentDelivery - Web content", control_type="Pane")
+   |    |    |    |    |    | 
+   |    |    |    |    |    | Pane - ''    (L-3800, T68, R-1571, B1783)
+   |    |    |    |    |    | ['Pane5']
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - ''    (L0, T0, R0, B0)
+   |    |    |    |    |    |    | ['Pane6']
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - ''    (L-3800, T68, R-1571, B1783)
+   |    |    |    |    |    |    | ['Pane7']
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - ''    (L-3800, T68, R-1571, B1783)
+   |    |    |    |    |    |    | ['Pane16']
