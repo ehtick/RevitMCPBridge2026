@@ -358,6 +358,9 @@ namespace RevitMCPBridge
                 var floorIds = new List<long>();
                 long roofId = 0;
                 string roofErr = null;
+                string roofKind = parameters["roofType"]?.ToString()?.ToLower() ?? "flat";
+                double roofSlopeDeg = parameters["roofSlope"]?.ToObject<double>() ?? 26.57; // 6:12
+                double roofSlopeTan = Math.Tan(roofSlopeDeg * Math.PI / 180.0);
 
                 using (var trans = new Transaction(doc, "Build Shell From Mass"))
                 {
@@ -401,7 +404,7 @@ namespace RevitMCPBridge
                         stories.Add(new { level = lvl.Name, baseZ = z0, height = h, walls = storyWalls, floorId });
                     }
 
-                    // Flat roof at the top
+                    // Roof at the top — flat (default), hip, or gable
                     if (makeRoof && roofType != null)
                     {
                         try
@@ -412,8 +415,32 @@ namespace RevitMCPBridge
                                 arr.Append(c);
                             ModelCurveArray mca = new ModelCurveArray();
                             var roof = doc.Create.NewFootPrintRoof(arr, roofLevel, roofType, out mca);
-                            foreach (ModelCurve mc in mca)
-                                roof.set_DefinesSlope(mc, false); // flat
+
+                            var edges = mca.Cast<ModelCurve>().ToList();
+                            if (roofKind == "hip")
+                            {
+                                foreach (var mc in edges)
+                                { roof.set_DefinesSlope(mc, true); roof.set_SlopeAngle(mc, roofSlopeTan); }
+                            }
+                            else if (roofKind == "gable" && edges.Count == 4)
+                            {
+                                // slope the LONG pair -> gable ends form on the short walls (Weber rule)
+                                var ranked = edges.Select((mc, i) => new { mc, len = mc.GeometryCurve.Length })
+                                                  .OrderByDescending(x => x.len).ToList();
+                                var longPair = new HashSet<ModelCurve> { ranked[0].mc, ranked[1].mc };
+                                foreach (var mc in edges)
+                                {
+                                    bool slope = longPair.Contains(mc);
+                                    roof.set_DefinesSlope(mc, slope);
+                                    if (slope) roof.set_SlopeAngle(mc, roofSlopeTan);
+                                }
+                            }
+                            else // flat (or gable on a non-quad footprint -> flat fallback)
+                            {
+                                foreach (var mc in edges) roof.set_DefinesSlope(mc, false);
+                                if (roofKind == "gable") roofKind = "flat(gable-needs-quad)";
+                            }
+
                             var off = roof.get_Parameter(BuiltInParameter.ROOF_LEVEL_OFFSET_PARAM);
                             if (off != null && !off.IsReadOnly) off.Set(topZ - roofLevel.Elevation);
                             roofId = roof.Id.Value;
@@ -432,6 +459,7 @@ namespace RevitMCPBridge
                     .With("wallCount", wallIds.Count)
                     .With("floorCount", floorIds.Count)
                     .With("roofId", roofId)
+                    .With("roofKind", roofKind)
                     .With("roofError", roofErr)
                     .With("wallTypeUsed", wallType.Name)
                     .With("floorTypeUsed", floorType?.Name)
