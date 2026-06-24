@@ -90,6 +90,67 @@ namespace RevitMCPBridge
         }
 
         /// <summary>
+        /// Create a SMOOTH dome as a true solid of revolution (the proper way — not stacked slices).
+        /// Revolves a quarter-ellipse profile 360° about the vertical axis through the center.
+        /// </summary>
+        [MCPMethod("createRevolvedDome", Category = "Mass", Description = "Smooth dome via revolved geometry (radius + dome height); proper modeling, not stacked massing")]
+        public static string CreateRevolvedDome(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+                if (parameters["center"] == null || parameters["radius"] == null)
+                    return ResponseBuilder.Error("center [x,y,z] and radius are required", "VALIDATION_ERROR").Build();
+                var c = parameters["center"].ToObject<double[]>();
+                double R = parameters["radius"].ToObject<double>();
+                double H = parameters["height"]?.ToObject<double>() ?? R;   // dome rise; default hemisphere
+                bool solid = parameters["solidBase"]?.ToObject<bool>() ?? true;
+                double cx = c[0], cy = c[1], bz = c.Length > 2 ? c[2] : 0.0;
+
+                XYZ origin = new XYZ(cx, cy, bz);
+                // Revolution axis = frame.BasisZ (vertical). Profile must lie in a plane CONTAINING that
+                // axis — here the X-Z plane (radial = BasisX, vertical = BasisZ).
+                XYZ rad = XYZ.BasisX, up = XYZ.BasisZ;
+                var frame = new Frame(origin, XYZ.BasisX, XYZ.BasisY, XYZ.BasisZ);
+
+                XYZ p1 = origin + R * rad;     // base edge (R, 0)
+                XYZ apex = origin + H * up;    // top on axis (0, H)
+                XYZ p0 = origin;               // axis base (0, 0)
+
+                Curve domeCurve = (Math.Abs(H - R) < 1e-6)
+                    ? Arc.Create(origin, R, 0.0, Math.PI / 2.0, rad, up)               // hemisphere
+                    : Ellipse.CreateCurve(origin, R, H, rad, up, 0.0, Math.PI / 2.0);  // shallow/tall dome
+
+                var profile = new CurveLoop();
+                profile.Append(domeCurve);                  // dome surface: p1 -> apex
+                profile.Append(Line.CreateBound(apex, p0)); // down the axis
+                profile.Append(Line.CreateBound(p0, p1));   // base radius
+
+                var dome = GeometryCreationUtilities.CreateRevolvedGeometry(
+                    frame, new List<CurveLoop> { profile }, 0.0, 2.0 * Math.PI);
+
+                using (var trans = new Transaction(doc, "Revolved Dome"))
+                {
+                    trans.Start();
+                    var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Mass));
+                    ds.SetShape(new GeometryObject[] { dome });
+                    ds.Name = parameters["name"]?.ToString() ?? "Dome";
+                    trans.CommitAndCheck();
+                    return ResponseBuilder.Success()
+                        .With("massId", ds.Id.Value)
+                        .With("center", new { x = cx, y = cy, z = bz })
+                        .With("radius", R).With("domeHeight", H)
+                        .With("note", "smooth solid of revolution")
+                        .Build();
+                }
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
         /// Convert the vertical faces of a mass (DirectShape) into native walls.
         /// Prefers the true FaceWall.Create API; for any face the API rejects, falls back
         /// to a Wall.Create along that face's base edge. Reports which path each face took.
