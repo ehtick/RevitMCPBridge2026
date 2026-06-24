@@ -86,6 +86,117 @@ namespace RevitMCPBridge2026
         }
 
         /// <summary>
+        /// Bind an image file as a material's diffuse texture at real-world scale.
+        /// Used for georeferenced aerial underlays: texture a ground-plane floor with a satellite
+        /// image sized to the real-world feet of the aerial, so the model sits on it in Realistic 3D.
+        /// </summary>
+        [MCPMethod("setMaterialImageTexture", Category = "Material", Description = "Bind an image file as a material's diffuse texture at real-world scale (aerial underlay)")]
+        public static string SetMaterialImageTexture(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+
+                // resolve material by id or name
+                Material mat = null;
+                if (parameters["materialId"] != null)
+                    mat = doc.GetElement(new ElementId(parameters["materialId"].ToObject<long>())) as Material;
+                else if (parameters["materialName"] != null)
+                {
+                    string n = parameters["materialName"].ToString();
+                    mat = new FilteredElementCollector(doc).OfClass(typeof(Material)).Cast<Material>()
+                          .FirstOrDefault(m => m.Name == n);
+                }
+                if (mat == null)
+                    return ResponseBuilder.Error("material not found (pass materialId or materialName)", "ELEMENT_NOT_FOUND").Build();
+
+                string imagePath = parameters["imagePath"]?.ToString();
+                if (string.IsNullOrEmpty(imagePath) || !System.IO.File.Exists(imagePath))
+                    return ResponseBuilder.Error($"imagePath missing or not found: {imagePath}", "MISSING_PARAMETER").Build();
+
+                double sx = parameters["realWorldScaleXFt"]?.ToObject<double>() ?? 10.0;
+                double sy = parameters["realWorldScaleYFt"]?.ToObject<double>() ?? 10.0;
+                double ox = parameters["realWorldOffsetXFt"]?.ToObject<double>() ?? 0.0;
+                double oy = parameters["realWorldOffsetYFt"]?.ToObject<double>() ?? 0.0;
+
+                // The base appearance asset MUST be a Generic schema (has 'generic_diffuse'),
+                // otherwise a bound bitmap won't drive the visible color (renders flat/gray).
+                AppearanceAssetElement genericBase = null;
+                foreach (var ae in new FilteredElementCollector(doc).OfClass(typeof(AppearanceAssetElement)).Cast<AppearanceAssetElement>())
+                {
+                    try { var ra = ae.GetRenderingAsset(); if (ra != null && ra.FindByName("generic_diffuse") != null) { genericBase = ae; break; } }
+                    catch { }
+                }
+                if (genericBase == null)
+                    return ResponseBuilder.Error("no Generic-schema appearance asset to base on", "ERROR").Build();
+
+                // (re)base this material on a fresh Generic asset, then bind the bitmap — the
+                // AppearanceAssetEditScope must run INSIDE a transaction in Revit 2026 (its Commit
+                // needs an open transaction; running it outside throws "no opened transaction").
+                ElementId assetId;
+                string dupName = mat.Name + "_tex";
+                string diag;
+                using (var trans = new Transaction(doc, "Set Material Image Texture"))
+                {
+                    trans.Start();
+                    var existingDup = new FilteredElementCollector(doc).OfClass(typeof(AppearanceAssetElement))
+                                      .Cast<AppearanceAssetElement>().FirstOrDefault(a => a.Name == dupName);
+                    var dup = existingDup ?? genericBase.Duplicate(dupName);
+                    mat.AppearanceAssetId = dup.Id;
+                    mat.UseRenderAppearanceForShading = true;   // show texture in shaded views too
+                    assetId = dup.Id;
+
+                    using (var scope = new AppearanceAssetEditScope(doc))
+                    {
+                        Asset editable = scope.Start(assetId);
+                        AssetProperty diffuse = editable.FindByName("generic_diffuse");
+                        if (diffuse == null)
+                        {
+                            var names = new List<string>();
+                            for (int i = 0; i < editable.Size; i++) { try { names.Add(editable[i].Name); } catch { } }
+                            trans.RollBack();
+                            return ResponseBuilder.Error("no 'generic_diffuse' slot on this appearance schema", "SCHEMA")
+                                .With("availableProperties", names).Build();
+                        }
+
+                        if (diffuse.NumberOfConnectedProperties == 0)
+                            diffuse.AddConnectedAsset("UnifiedBitmapSchema");
+                        Asset bitmap = diffuse.GetSingleConnectedAsset();
+                        if (bitmap == null)
+                        { trans.RollBack(); return ResponseBuilder.Error("could not attach UnifiedBitmap", "ERROR").Build(); }
+
+                        var bmpPath = bitmap.FindByName(UnifiedBitmap.UnifiedbitmapBitmap) as AssetPropertyString;
+                        if (bmpPath != null && bmpPath.IsValidValue(imagePath)) bmpPath.Value = imagePath;
+                        var scaleX = bitmap.FindByName(UnifiedBitmap.TextureRealWorldScaleX) as AssetPropertyDistance;
+                        var scaleY = bitmap.FindByName(UnifiedBitmap.TextureRealWorldScaleY) as AssetPropertyDistance;
+                        if (scaleX != null) scaleX.Value = sx;   // internal units = feet
+                        if (scaleY != null) scaleY.Value = sy;
+                        var offX = bitmap.FindByName(UnifiedBitmap.TextureRealWorldOffsetX) as AssetPropertyDistance;
+                        var offY = bitmap.FindByName(UnifiedBitmap.TextureRealWorldOffsetY) as AssetPropertyDistance;
+                        if (offX != null) offX.Value = ox;
+                        if (offY != null) offY.Value = oy;
+                        diag = bmpPath != null ? "bitmap bound" : "bitmap path slot missing";
+                        scope.Commit(true);
+                    }
+                    trans.CommitAndCheck();
+                }
+
+                return ResponseBuilder.Success()
+                    .With("materialId", mat.Id.Value)
+                    .With("appearanceAssetId", assetId.Value)
+                    .With("imagePath", imagePath)
+                    .With("realWorldScaleXFt", sx)
+                    .With("realWorldScaleYFt", sy)
+                    .With("note", diag)
+                    .Build();
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
         /// Gets all materials in the project
         /// </summary>
         [MCPMethod("getAllMaterials", Category = "Material", Description = "Gets all materials in the project")]
