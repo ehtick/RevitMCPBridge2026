@@ -1517,12 +1517,12 @@ namespace RevitMCPBridge
                         profile.Append(Line.CreateBound(start, end));
                     }
 
-                    // Create reference plane for extrusion
-                    var normal = XYZ.BasisY; // Extrude along Y
-                    var origin = new XYZ(extrusionStart[0], extrusionStart[1], level.Elevation);
-                    var plane = Plane.CreateByNormalAndOrigin(normal, origin);
-                    var refPlane = doc.Create.NewReferencePlane(origin, origin + XYZ.BasisX, origin + XYZ.BasisZ, doc.ActiveView);
-
+                    // Reference plane = the X-Z plane (normal Y) CONTAINING the profile (built at Y=0 above).
+                    // cutVec must be a DIRECTION (XYZ.BasisZ), not a far point (origin+BasisZ) — the latter is
+                    // not perpendicular to the bubble->free line, so the plane can't be laid out.
+                    var origin = new XYZ(extrusionStart[0], 0, level.Elevation);
+                    var refPlane = doc.Create.NewReferencePlane(origin, origin + XYZ.BasisX, XYZ.BasisZ, doc.ActiveView);
+                    // start/end = the Y extents of the extrusion (perpendicular to the plane).
                     roof = doc.Create.NewExtrusionRoof(profile, refPlane, level, roofType, extrusionStart[1], extrusionStart[1] + extrusionLength);
 
                     trans.CommitAndCheck();
