@@ -703,10 +703,10 @@ namespace RevitMCPBridge
                 {
                     newStairId = stairsScope.Start(baseLevel.Id, topLevel.Id);
 
-                    using (var trans = new SubTransaction(doc))
+                    // Inside the StairsEditScope a regular Transaction (NOT a SubTransaction) is required.
+                    using (var trans = new Transaction(doc, "Add Stair Runs"))
                     {
                         trans.Start();
-
                         // Determine location line
                         StairsRunJustification justification = StairsRunJustification.Center;
                         if (locationLine.ToLower() == "left")
@@ -747,7 +747,7 @@ namespace RevitMCPBridge
                             runIds.Add(run.Id.Value);
                         }
 
-                        trans.CommitAndCheck();
+                        trans.Commit();
                     }
 
                     stairsScope.Commit(new StairsFailurePreprocessor());
@@ -828,10 +828,11 @@ namespace RevitMCPBridge
                 {
                     newStairId = stairsScope.Start(baseLevel.Id, topLevel.Id);
 
-                    using (var trans = new SubTransaction(doc))
+                    // Inside the StairsEditScope a regular Transaction (NOT a SubTransaction) is required to
+                    // create/modify runs — SubTransaction needs an outer Transaction the scope doesn't provide.
+                    using (var trans = new Transaction(doc, "Add Stair Runs"))
                     {
                         trans.Start();
-
                         if (shape == "straight")
                         {
                             double runLength = (totalRisers - 1) * treadDepth;
@@ -893,7 +894,7 @@ namespace RevitMCPBridge
                             runIds.Add(run2.Id.Value);
                         }
 
-                        trans.CommitAndCheck();
+                        trans.Commit();
                     }
 
                     stairsScope.Commit(new StairsFailurePreprocessor());
