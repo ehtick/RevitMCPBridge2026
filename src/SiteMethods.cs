@@ -774,6 +774,133 @@ namespace RevitMCPBridge
         }
 
         /// <summary>
+        /// Create a Toposolid (Revit 2024+) from XYZ points. Smooth solid terrain (better than legacy TopographySurface).
+        /// </summary>
+        [MCPMethod("createToposolid", Category = "Site", Description = "Create a Toposolid from a list of XYZ points")]
+        public static string CreateToposolid(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+                var pts = parameters["points"]?.ToObject<double[][]>();
+                if (pts == null || pts.Length < 3)
+                    return JsonConvert.SerializeObject(new { success = false, error = "At least 3 points are required" });
+
+                var xyz = pts.Select(p => new XYZ(p[0], p[1], p.Length > 2 ? p[2] : 0)).ToList();
+
+                var typeId = new FilteredElementCollector(doc).OfClass(typeof(ToposolidType)).FirstElementId();
+                var level = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>()
+                    .OrderBy(l => l.Elevation).FirstOrDefault();
+                if (typeId == ElementId.InvalidElementId || level == null)
+                    return JsonConvert.SerializeObject(new { success = false, error = "No ToposolidType or Level found in document" });
+
+                double minx = xyz.Min(p => p.X), maxx = xyz.Max(p => p.X);
+                double miny = xyz.Min(p => p.Y), maxy = xyz.Max(p => p.Y);
+                var corners = new List<XYZ> {
+                    new XYZ(minx, miny, 0), new XYZ(maxx, miny, 0), new XYZ(maxx, maxy, 0), new XYZ(minx, maxy, 0)
+                };
+                var loop = new CurveLoop();
+                for (int i = 0; i < 4; i++)
+                    loop.Append(Line.CreateBound(corners[i], corners[(i + 1) % 4]));
+
+                using (var trans = new Transaction(doc, "Create Toposolid"))
+                {
+                    trans.Start();
+                    var fo = trans.GetFailureHandlingOptions();
+                    fo.SetFailuresPreprocessor(new WarningSwallower());
+                    trans.SetFailureHandlingOptions(fo);
+
+                    // Create a FLAT toposolid from the planar boundary loop, then drape it with the
+                    // elevation points via the SlabShapeEditor. The points-overload of Toposolid.Create
+                    // rolls back on large/varying point clouds; incremental shape editing is robust.
+                    var topo = Toposolid.Create(doc, new List<CurveLoop> { loop }, typeId, level.Id);
+                    doc.Regenerate();
+
+                    int shaped = 0;
+                    var editor = topo.GetSlabShapeEditor();
+                    if (editor != null)
+                    {
+                        if (!editor.IsEnabled)
+                        {
+                            try { editor.Enable(); doc.Regenerate(); } catch { }
+                        }
+                        try { editor.AddPoints(xyz); shaped = xyz.Count; }
+                        catch
+                        {
+                            foreach (var p in xyz)
+                            {
+                                try { editor.AddPoint(p); shaped++; } catch { }
+                            }
+                        }
+                    }
+                    trans.CommitAndCheck();
+
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = true,
+                        toposolidId = topo.Id.Value,
+                        pointCount = xyz.Count,
+                        shapedPoints = shaped
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
+        /// Create a subdivision (road / pad / graded region) on a Toposolid. Conforms to the host surface.
+        /// </summary>
+        [MCPMethod("createToposolidSubDivision", Category = "Site", Description = "Create a subdivision on a Toposolid from boundary points")]
+        public static string CreateToposolidSubDivision(UIApplication uiApp, JObject parameters)
+        {
+            try
+            {
+                var doc = uiApp.ActiveUIDocument.Document;
+                var hostId = parameters["toposolidId"]?.Value<int>();
+                var bp = parameters["boundaryPoints"]?.ToObject<double[][]>();
+                if (!hostId.HasValue || bp == null || bp.Length < 3)
+                    return JsonConvert.SerializeObject(new { success = false, error = "toposolidId and at least 3 boundaryPoints are required" });
+
+                var loop = new CurveLoop();
+                for (int i = 0; i < bp.Length; i++)
+                {
+                    var a = new XYZ(bp[i][0], bp[i][1], 0);
+                    var b = new XYZ(bp[(i + 1) % bp.Length][0], bp[(i + 1) % bp.Length][1], 0);
+                    loop.Append(Line.CreateBound(a, b));
+                }
+
+                var host = doc.GetElement(new ElementId(hostId.Value)) as Toposolid;
+                if (host == null)
+                    return JsonConvert.SerializeObject(new { success = false, error = "Host Toposolid not found" });
+
+                using (var trans = new Transaction(doc, "Create Toposolid SubDivision"))
+                {
+                    trans.Start();
+                    var fo = trans.GetFailureHandlingOptions();
+                    fo.SetFailuresPreprocessor(new WarningSwallower());
+                    trans.SetFailureHandlingOptions(fo);
+
+                    var sub = host.CreateSubDivision(doc, new List<CurveLoop> { loop });
+                    trans.CommitAndCheck();
+
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = true,
+                        subDivisionId = sub.Id.Value,
+                        hostToposolidId = hostId.Value
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return ResponseBuilder.FromException(ex).Build();
+            }
+        }
+
+        /// <summary>
         /// Get all sub-regions on a topography surface
         /// </summary>
         [MCPMethod("getSubRegions", Category = "Site", Description = "Get all sub-regions on a topography surface")]

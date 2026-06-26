@@ -744,12 +744,58 @@ namespace RevitMCPBridge
         {
             try
             {
+                if (uiApp == null || uiApp.ActiveUIDocument == null)
+                {
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No active document. Please ensure a Revit project is open."
+                    });
+                }
+
                 var doc = uiApp.ActiveUIDocument.Document;
 
-                var elementIds = parameters["elementIds"].ToObject<int[]>()
-                    .Select(id => new ElementId(id)).ToList();
-                var axisPoint = parameters["axisPoint"].ToObject<double[]>();
-                var angle = parameters["angle"].ToObject<double>(); // in degrees
+                if (parameters["elementIds"] == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "elementIds is required" });
+                }
+
+                // Resolve ids and drop any that no longer exist (deleted/invalid ids are a
+                // common source of NullReferenceException inside RotateElements).
+                var requestedIds = parameters["elementIds"].ToObject<int[]>();
+                var elementIds = requestedIds
+                    .Select(id => new ElementId(id))
+                    .Where(eid => doc.GetElement(eid) != null)
+                    .ToList();
+
+                if (elementIds.Count == 0)
+                {
+                    return JsonConvert.SerializeObject(new
+                    {
+                        success = false,
+                        error = "No valid elements to rotate (all ids missing or already deleted).",
+                        requestedCount = requestedIds.Length
+                    });
+                }
+
+                // Accept axisPoint (canonical) or centerPoint (alias) so either dispatch path works.
+                var pointToken = parameters["axisPoint"] ?? parameters["centerPoint"] ?? parameters["center"];
+                if (pointToken == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "axisPoint (or centerPoint) is required" });
+                }
+                var axisPoint = pointToken.ToObject<double[]>();
+                double px = axisPoint.Length > 0 ? axisPoint[0] : 0;
+                double py = axisPoint.Length > 1 ? axisPoint[1] : 0;
+                double pz = axisPoint.Length > 2 ? axisPoint[2] : 0;
+
+                // Accept angle (canonical) or angleDegrees (alias).
+                var angleToken = parameters["angle"] ?? parameters["angleDegrees"];
+                if (angleToken == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "angle is required" });
+                }
+                var angle = angleToken.ToObject<double>(); // in degrees
 
                 using (var trans = new Transaction(doc, "Rotate Elements"))
                 {
@@ -758,18 +804,44 @@ namespace RevitMCPBridge
                     failureOptions.SetFailuresPreprocessor(new WarningSwallower());
                     trans.SetFailureHandlingOptions(failureOptions);
 
-                    var point = new XYZ(axisPoint[0], axisPoint[1], axisPoint[2]);
+                    var point = new XYZ(px, py, pz);
                     var axis = Line.CreateBound(point, point + XYZ.BasisZ);
                     var radians = angle * Math.PI / 180.0;
 
-                    ElementTransformUtils.RotateElements(doc, elementIds, axis, radians);
+                    int rotated = 0;
+                    var skipped = new List<object>();
+
+                    // Try the batch rotate first; if it throws, fall back to per-element so
+                    // a single un-rotatable element can't null the entire operation.
+                    try
+                    {
+                        ElementTransformUtils.RotateElements(doc, elementIds, axis, radians);
+                        rotated = elementIds.Count;
+                    }
+                    catch
+                    {
+                        foreach (var eid in elementIds)
+                        {
+                            try
+                            {
+                                ElementTransformUtils.RotateElement(doc, eid, axis, radians);
+                                rotated++;
+                            }
+                            catch (Exception exEl)
+                            {
+                                skipped.Add(new { elementId = eid.ToString(), error = exEl.Message });
+                            }
+                        }
+                    }
 
                     trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
                     {
-                        success = true,
-                        rotatedCount = elementIds.Count,
+                        success = rotated > 0,
+                        rotatedCount = rotated,
+                        skippedCount = skipped.Count,
+                        skipped = skipped,
                         angleDegrees = angle
                     });
                 }

@@ -463,10 +463,12 @@ namespace RevitMCPBridge
         {
             try
             {
-                var doc = uiApp.ActiveUIDocument?.Document;
-                if (doc == null || !doc.IsFamilyDocument)
+                // Resolve the family doc WITHOUT requiring it be the active UI document (API-created family
+                // docs created by createNewFamily can't be activated) — matches createBlend/createSweep/etc.
+                var doc = ResolveFamilyDoc(uiApp, parameters);
+                if (doc == null)
                 {
-                    return JsonConvert.SerializeObject(new { success = false, error = "Not in family editor" });
+                    return JsonConvert.SerializeObject(new { success = false, error = "No family document found. Open/create a family (createNewFamily) and pass familyTitle." });
                 }
 
                 var profilePoints = parameters["profilePoints"] as JArray;
@@ -519,6 +521,7 @@ namespace RevitMCPBridge
                         ElementTransformUtils.MoveElement(doc, extrusion.Id, new XYZ(0, 0, startOffset));
                     }
 
+                    var extMat = ApplyFormMaterial(doc, extrusion, parameters);
                     trans.CommitAndCheck();
 
                     return JsonConvert.SerializeObject(new
@@ -528,6 +531,7 @@ namespace RevitMCPBridge
                         isSolid = isSolid,
                         startOffset = startOffset,
                         endOffset = endOffset,
+                        material = extMat,
                         message = "Extrusion created"
                     });
                 }
@@ -559,6 +563,42 @@ namespace RevitMCPBridge
                 firstFam = firstFam ?? d;
             }
             return string.IsNullOrEmpty(wanted) ? firstFam : null;
+        }
+
+        /// <summary>Bake a material onto a form (extrusion/blend/sweep/revolve) INSIDE the family doc, so the
+        /// loaded family + every placed instance shows it natively — no doc.Paint (which fails on instances).
+        /// Reads optional params: material (name) and color ([r,g,b]). Find-or-create the material in famDoc,
+        /// set its graphic Color, then set the form's MATERIAL_ID_PARAM. No-op if neither param present.</summary>
+        private static string ApplyFormMaterial(Document famDoc, Element form, JObject parameters)
+        {
+            try
+            {
+                var matName = parameters["material"]?.ToString();
+                var colorTok = parameters["color"] as JArray;
+                if (string.IsNullOrEmpty(matName) && colorTok == null) return null;
+                if (string.IsNullOrEmpty(matName)) matName = "PM_FormMaterial";
+
+                Material mat = new FilteredElementCollector(famDoc).OfClass(typeof(Material)).Cast<Material>()
+                    .FirstOrDefault(m => m.Name.Equals(matName, StringComparison.OrdinalIgnoreCase));
+                if (mat == null)
+                {
+                    var mid = Material.Create(famDoc, matName);
+                    mat = famDoc.GetElement(mid) as Material;
+                }
+                if (colorTok != null && colorTok.Count >= 3 && mat != null)
+                {
+                    mat.Color = new Color((byte)colorTok[0].Value<int>(), (byte)colorTok[1].Value<int>(), (byte)colorTok[2].Value<int>());
+                    mat.UseRenderAppearanceForShading = false;
+                }
+                if (mat != null)
+                {
+                    var p = form.get_Parameter(BuiltInParameter.MATERIAL_ID_PARAM);
+                    if (p != null && !p.IsReadOnly) p.Set(mat.Id);
+                    return "material:" + mat.Name;
+                }
+            }
+            catch (Exception ex) { return "material-FAILED:" + ex.Message; }
+            return null;
         }
 
         /// <summary>Closed CurveArray from a profile JArray. Each point is {x,y} (or {x,z}); a point with
@@ -618,9 +658,10 @@ namespace RevitMCPBridge
                     var baseLoop = Loop(baseProfile, 0);
                     var topLoop = Loop(topProfile, height);
                     var blend = doc.FamilyCreate.NewBlend(isSolid, topLoop, baseLoop, sketchPlane);
+                    var blendMat = ApplyFormMaterial(doc, blend, parameters);
 
                     trans.CommitAndCheck();
-                    return JsonConvert.SerializeObject(new { success = true, blendId = (int)blend.Id.Value, height, isSolid, message = "Blend created (verify height + top placement)" });
+                    return JsonConvert.SerializeObject(new { success = true, blendId = (int)blend.Id.Value, height, isSolid, material = blendMat, message = "Blend created (verify height + top placement)" });
                 }
             }
             catch (Exception ex)
@@ -663,8 +704,9 @@ namespace RevitMCPBridge
                     double end = endAngleDeg * Math.PI / 180.0;
 
                     var revolve = doc.FamilyCreate.NewRevolution(isSolid, profile, sketchPlane, axis, start, end);
+                    var revMat = ApplyFormMaterial(doc, revolve, parameters);
                     trans.CommitAndCheck();
-                    return JsonConvert.SerializeObject(new { success = true, revolveId = (int)revolve.Id.Value, startAngle = startAngleDeg, endAngle = endAngleDeg, isSolid, message = "Revolve created (verify axis/plane orientation)" });
+                    return JsonConvert.SerializeObject(new { success = true, revolveId = (int)revolve.Id.Value, startAngle = startAngleDeg, endAngle = endAngleDeg, isSolid, material = revMat, message = "Revolve created (verify axis/plane orientation)" });
                 }
             }
             catch (Exception ex)
@@ -701,15 +743,17 @@ namespace RevitMCPBridge
                     var path = new CurveArray();
                     for (int i = 0; i < pathPts.Count - 1; i++) path.Append(Line.CreateBound(pathPts[i], pathPts[i + 1]));   // OPEN path
 
-                    // closed cross-section profile (arc-capable). Built in {x,z}; Revit orients it perpendicular to the path.
-                    var profLoop = BuildProfileLoop(profilePoints, pt => new XYZ(pt["x"]?.Value<double>() ?? 0, 0, pt["z"]?.Value<double>() ?? 0));
+                    // closed cross-section profile (arc-capable). Built FLAT in the XY plane ({x,z}->(x,z,0));
+                    // NewSweep with ProfilePlaneLocation.Start reorients it perpendicular to the path at its start.
+                    var profLoop = BuildProfileLoop(profilePoints, pt => new XYZ(pt["x"]?.Value<double>() ?? 0, pt["z"]?.Value<double>() ?? 0, 0));
                     var profArr = new CurveArrArray();
                     profArr.Append(profLoop);
                     SweepProfile sweepProfile = doc.Application.Create.NewCurveLoopsProfile(profArr);
 
                     var sweep = doc.FamilyCreate.NewSweep(isSolid, path, pathPlane, sweepProfile, 0, ProfilePlaneLocation.Start);
+                    var swMat = ApplyFormMaterial(doc, sweep, parameters);
                     trans.CommitAndCheck();
-                    return JsonConvert.SerializeObject(new { success = true, sweepId = (int)sweep.Id.Value, isSolid, message = "Sweep created (verify profile orientation along the path)" });
+                    return JsonConvert.SerializeObject(new { success = true, sweepId = (int)sweep.Id.Value, isSolid, material = swMat, message = "Sweep created (verify profile orientation along the path)" });
                 }
             }
             catch (Exception ex)

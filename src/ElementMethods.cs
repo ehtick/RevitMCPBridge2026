@@ -2135,10 +2135,26 @@ namespace RevitMCPBridge
 
                 var doc = uiApp.ActiveUIDocument.Document;
 
-                // Parse parameters
+                // Parse parameters (accept centerPoint or axisPoint alias; angle or angleDegrees)
+                if (parameters["elementIds"] == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "elementIds is required" });
+                }
                 var elementIds = parameters["elementIds"].ToObject<int[]>();
-                var centerPoint = parameters["centerPoint"].ToObject<double[]>();
-                var angleDegrees = double.Parse(parameters["angle"].ToString());
+
+                var centerToken = parameters["centerPoint"] ?? parameters["axisPoint"] ?? parameters["center"];
+                if (centerToken == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "centerPoint (or axisPoint) is required" });
+                }
+                var centerPoint = centerToken.ToObject<double[]>();
+
+                var angleToken = parameters["angle"] ?? parameters["angleDegrees"];
+                if (angleToken == null)
+                {
+                    return JsonConvert.SerializeObject(new { success = false, error = "angle is required" });
+                }
+                var angleDegrees = double.Parse(angleToken.ToString());
                 var axis = parameters["axis"]?.ToObject<double[]>() ?? new double[] { 0, 0, 1 }; // Default Z axis
 
                 var center = new XYZ(centerPoint[0], centerPoint[1], centerPoint[2]);
